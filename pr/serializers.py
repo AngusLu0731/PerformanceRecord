@@ -86,22 +86,74 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
     dl = serializers.SerializerMethodField()
     viceCEO = serializers.SerializerMethodField()
     ceo = serializers.SerializerMethodField()
+    chairman = serializers.SerializerMethodField()
 
     class Meta:
         model = Employee
-        fields = ("id", "name", "deptName", "score", "gl", "dl", "viceCEO", "ceo")
+        fields = ("id", "name", "deptName", "projectScore", "normalScore", "gl", "dl", "viceCEO", "ceo", "chairman")
 
     def get_deptName(self, obj):
         return obj.dept.name
 
     def get_projectScore(self, obj):
-        ceo = SupervisorInfo.objects.get(dept__id="A3")  #test用
-        pr = ProjectPR.objects.first(eid=obj.id)
-        ceoPoint = ProjectReviewRecord.objects.get(reviewer=ceo.eid_id, pid=pr.id)
-        return ceoPoint.point
+        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
+        prSet = ProjectPR.objects.filter(eid=obj.id)
+        if len(prSet) > 0:
+            pr = prSet[0]
+            try:
+                ceoPoint = ProjectReviewRecord.objects.get(reviewer=ceo.eid_id, pid=pr.id)
+                return ceoPoint.point
+            except ObjectDoesNotExist:
+                return ""
+        return ""
 
     def get_normalScore(self, obj):
-        return
+        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
+        prSet = ProjectPR.objects.filter(eid=obj.id)
+        if len(prSet) > 0:
+            pr = prSet[0]
+            try:
+                ceoPoint = NormalReviewRecord.objects.get(reviewer=ceo.eid_id, pid=pr.id)
+                return ceoPoint.point
+            except ObjectDoesNotExist:
+                return ""
+        return ""
+
+    def get_gl(self, obj):
+        data = ""
+        try:
+            o = Order.objects.get(id=obj.dept.parent)
+        except ObjectDoesNotExist:
+            pass
+        if o.parent == "viceCEO":
+            gl = SupervisorInfo.objects.get(dept=obj.dept)
+            data = creditFind(gl.eid_id, obj.id, data)
+        return data
+
+    def get_dl(self, obj):
+        data = ""
+        if obj.dept.parent != "viceCEO" and obj.dept_id != "viceCEO":
+            dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
+            data = creditFind(dl.eid_id, obj.id, data)
+        return data
+
+    def get_viceCEO(self, obj):
+        data = ""
+        viceCEO = SupervisorInfo.objects.get(dept__id="viceCEO")
+        data = creditFind(viceCEO.eid_id, obj.id, data)
+        return data
+
+    def get_ceo(self, obj):
+        data = ""
+        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
+        data = creditFind(ceo.eid_id, obj.id, data)
+        return data
+
+    def get_chairman(self, obj):
+        data = ""
+        chairman = SupervisorInfo.objects.get(dept__id="A4")  # test用
+        data = creditFind(chairman.eid_id, obj.id, data)
+        return data
 
 
 class ProjectPRGetSerializer(serializers.ModelSerializer):
@@ -126,13 +178,14 @@ class ProjectNeedRecordSerializer(serializers.ModelSerializer):
     dl = serializers.SerializerMethodField()
     viceCEO = serializers.SerializerMethodField()
     ceo = serializers.SerializerMethodField()
+    chairman = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectPR
         fields = ("id", "eid", "belongProject", "workProject",
                   "workDirection", "proportion", "status", "score",
                   "eName", "dept", "deptName", "pName", "pm",
-                  "gl", "dl", "viceCEO", "ceo")
+                  "gl", "dl", "viceCEO", "ceo", "chairman")
 
     def get_eName(self, obj):
         return obj.eid.name
@@ -182,6 +235,12 @@ class ProjectNeedRecordSerializer(serializers.ModelSerializer):
         data = cEOPoint(con, rec)
         return data
 
+    def get_chairman(self, obj):
+        con = {"point": "", "content": "", "proportion": "", "recordID": ""}
+        rec = ProjectReviewRecord.objects.filter(pid=obj.id)
+        data = chairmanPoint(con, rec)
+        return data
+
 
 class NormalNeedRecordSerializer(serializers.ModelSerializer):
     eName = serializers.SerializerMethodField()
@@ -191,12 +250,13 @@ class NormalNeedRecordSerializer(serializers.ModelSerializer):
     dl = serializers.SerializerMethodField()
     viceCEO = serializers.SerializerMethodField()
     ceo = serializers.SerializerMethodField()
+    chairman = serializers.SerializerMethodField()
 
     class Meta:
         model = NormalPR
         fields = ("id", "eid", "workQuality", "workAmount",
                   "coordination", "learning", "status", "score", "eName",
-                  "dept", "deptName", "gl", "dl", "viceCEO", "ceo")
+                  "dept", "deptName", "gl", "dl", "viceCEO", "ceo", "chairman")
 
     def get_eName(self, obj):
         return obj.eid.name
@@ -231,16 +291,27 @@ class NormalNeedRecordSerializer(serializers.ModelSerializer):
         data = cEOPoint(con, rec)
         return data
 
+    def get_chairman(self, obj):
+        con = {"point": "", "content": "", "recordID": ""}
+        rec = NormalReviewRecord.objects.filter(pid=obj.id)
+        data = chairmanPoint(con, rec)
+        return data
+
 
 def glPoint(data, rec, obj):
     try:
-        gl = SupervisorInfo.objects.get(dept__id=obj.eid.dept.id)
-        glRecord = rec.get(reviewer=gl.eid_id)
-        data["point"] = glRecord.point
-        data["content"] = glRecord.content
-        data["recordID"] = glRecord.id
-        if type(obj) == ProjectPR:
-            data["proportion"] = glRecord.proportion
+        o = Order.objects.get(id=obj.eid.dept.parent)
+    except ObjectDoesNotExist:
+        pass
+    try:
+        if o.parent == "viceCEO":
+            gl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
+            glRecord = rec.get(reviewer=gl.eid_id)
+            data["point"] = glRecord.point
+            data["content"] = glRecord.content
+            data["recordID"] = glRecord.id
+            if type(obj) == ProjectPR:
+                data["proportion"] = glRecord.proportion
     except ObjectDoesNotExist:
         pass
     return data
@@ -273,11 +344,32 @@ def viceCEOPoint(data, rec):
 
 def cEOPoint(data, rec):
     try:
-        ceo = SupervisorInfo.objects.get(dept__id="A3") #test用
+        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
         ceoRecord = rec.get(reviewer=ceo.eid_id)
         data["point"] = ceoRecord.point
         data["content"] = ceoRecord.content
         data["recordID"] = ceoRecord.id
+    except ObjectDoesNotExist:
+        pass
+    return data
+
+
+def chairmanPoint(data, rec):
+    try:
+        chairman = SupervisorInfo.objects.get(dept__id="A4")  # test用
+        chairmanRecord = rec.get(reviewer=chairman.eid_id)
+        data["point"] = chairmanRecord.point
+        data["content"] = chairmanRecord.content
+        data["recordID"] = chairmanRecord.id
+    except ObjectDoesNotExist:
+        pass
+    return data
+
+
+def creditFind(giver, receiver, data):
+    try:
+        c = CreditRecord.objects.get(giver=giver, receiver=receiver)
+        data = c.credit
     except ObjectDoesNotExist:
         pass
     return data

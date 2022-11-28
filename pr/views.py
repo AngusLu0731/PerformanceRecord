@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecord, NormalReviewRecord, SupervisorInfo, \
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
-    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer
+    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer
 from pr.util import msg, ValidToken
 
 
@@ -271,7 +271,7 @@ def projectPRRetrieve(request, pk):
 @api_view(['POST', 'GET'])
 def normalPR(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 1
+    eid = 4
     if type(eid) == Response:
         return eid
     if request.method == 'POST':
@@ -661,7 +661,11 @@ def projectReviewRecordList(request):
                 return Response(status=status.HTTP_404_NOT_FOUND, data=msg("此考績狀態有誤，請聯絡管理員"))
             if len(isSuperVisor) == 0:
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data=msg("非目前可評分主管"))
-            serializerPPR = ProjectPRSerializer(pPR, data={"status": o.parent}, partial=True)
+            chairman = ("A3", "viceCEO")
+            if pPR.status == "A3" and emp.dept_id in chairman:
+                serializerPPR = ProjectPRSerializer(pPR, data={"status": "A4"}, partial=True)
+            else:
+                serializerPPR = ProjectPRSerializer(pPR, data={"status": o.parent}, partial=True)
             if serializer.is_valid() and serializerPPR.is_valid():
                 serializer.save()
                 serializerPPR.save()
@@ -787,9 +791,13 @@ def normalReviewRecord(request, pk):
 @api_view(['GET', 'POST'])
 def normalReviewRecordList(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 5
+    eid = 4
     if type(eid) == Response:
         return eid
+    try:
+        emp = Employee.objects.get(id=eid)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND,data=msg("找不到員工"))
     if request.method == 'POST':
         normalPRID = request.data["normalPRID"]
         point = request.data["point"]
@@ -808,7 +816,11 @@ def normalReviewRecordList(request):
             return Response(status=status.HTTP_404_NOT_FOUND, data=msg("此考績狀態有誤，請聯絡管理員"))
         if len(isSuperVisor) == 0:
             return Response(status=status.HTTP_401_UNAUTHORIZED, data=msg("非目前可評分主管"))
-        serializerNPR = NormalPRSerializer(nPR, data={"status": o.parent}, partial=True)
+        chairman = ("A3", "viceCEO")
+        if nPR.status == "A3" and emp.dept_id in chairman:
+            serializerNPR = NormalPRSerializer(nPR, data={"status": "A4"}, partial=True)
+        else:
+            serializerNPR = NormalPRSerializer(nPR, data={"status": o.parent}, partial=True)
         if serializer.is_valid() and serializerNPR.is_valid():
             serializer.save()
             serializerNPR.save()
@@ -893,36 +905,40 @@ def ReviewRecordList(request):
             description='token key',
             type=openapi.TYPE_STRING
         )],
-    responses={200: "{projectReviewRecord: list(projectReviewRecord), "
-                    "normalReviewRecord: list(normalReviewRecord)}"}
+    responses={200: CreditNeedRecordSerializer()}
 )
 @api_view(['GET','POST'])
 def creditRecord(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = 5
     if type(eid) == Response:
         return eid
+    try:
+        g = SupervisorInfo.objects.get(eid=eid)
+    except SupervisorInfo.DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=msg("非主管"))
     if request.method == "POST":
         try:
             rec = Employee.objects.get(id=request.data["receiver"])
         except Employee.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST,data=msg("找不到接收者"))
-        try:
-            g = SupervisorInfo.objects.get(eid=eid)
-        except SupervisorInfo.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST,data=msg("給予者非主管"))
-        if rec.creditStatus != g.dept:
+
+        if rec.creditStatus != g.dept_id:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=msg("非當前給分者"))
         receiver = request.data["receiver"]
         grade = request.data["grade"]
         credit = request.data["credit"]
         data = {"giver": eid, "receiver": receiver, "grade": grade, "credit": credit}
-        serializer = CreditRecordSerializer(data)
+        serializer = CreditRecordSerializer(data=data)
         try:
             o = Order.objects.get(id=rec.creditStatus)
         except Order.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=msg("找不到下一階段給分者"))
-        serializerEmp = EmployeeSerializer(rec, creditStatus=o.parent, partial=True)
+        chairman = ("A3", "viceCEO")
+        if rec.creditStatus == "A3" and rec.dept_id in chairman:
+            serializerEmp = EmployeeSerializer(rec, data={"creditStatus": "A4"}, partial=True)
+        else:
+            serializerEmp = EmployeeSerializer(rec, data={"creditStatus": o.parent}, partial=True)
         if serializer.is_valid() and serializerEmp.is_valid():
             serializer.save()
             serializerEmp.save()
@@ -930,7 +946,16 @@ def creditRecord(request):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=msg("資料有誤"))
     if request.method == "GET":
-        pass
+        emp = Employee.objects.filter(creditStatus=g.dept_id)
+        if len(emp) != 0:
+            cre = CreditNeedRecordSerializer(emp,many=True)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND, data=msg("無資料"))
+        return Response(status=status.HTTP_200_OK, data=cre.data)
+
+
+
+
 
 
 @swagger_auto_schema(
@@ -1022,7 +1047,7 @@ def creditRecordRetrieve(request, pk):
 @api_view(['POST','GET'])
 def creditDistribution(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = 3
     if type(eid) == Response:
         return eid
     try:
@@ -1158,7 +1183,7 @@ def creditDistributionRetrieve(request, pk):
 @api_view(["POST", "GET"])
 def annotation(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = 3
     if type(eid) == Response:
         return eid
     try:
@@ -1167,16 +1192,25 @@ def annotation(request):
         return Response(status=status.HTTP_404_NOT_FOUND, data=msg("當前使用者非主管職"))
     if request.method == "POST":
         content = request.data["content"]
-        serializer = AnnotationSerializer(data={"giveDept": isSupervisor.dept_id,
+        viceCEOList = ("海洋產業處","船舶產業處") # test 待改成部門id
+        if isSupervisor.dept_id in viceCEOList or isSupervisor.dept.parent in viceCEOList:
+            serializer = AnnotationSerializer(data={"giveDept": isSupervisor.dept_id,
                                                 "content": content,
-                                                "status:": isSupervisor.dept.parent})
+                                                "status": "viceCEO"})
+        else:
+            serializer = AnnotationSerializer(data={"giveDept": isSupervisor.dept_id,
+                                                    "content": content,
+                                                    "status": "CEO"})
         if serializer.is_valid():
             serializer.save()
             return Response(status=status.HTTP_200_OK,data=serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST,data=msg("資料錯誤"))
     if request.method == "GET":
-        anno = Annotation.objects.filter(status=isSupervisor.dept_id)
+        if isSupervisor.dept_id == "viceCEO":
+            anno = Annotation.objects.filter(status=isSupervisor.dept_id)
+        else:
+            anno = Annotation.objects.all()
         if len(anno) == 0:
             return Response(status=status.HTTP_404_NOT_FOUND, data=msg("無當前可查看備註"))
         serializer = AnnotationSerializer(anno, many=True)
@@ -1267,7 +1301,7 @@ def annotationRetrieve(request, pk):
 @api_view(["GET"])
 def attendanceRecord(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = 1
     if type(eid) == Response:
         return eid
     try:
@@ -1287,6 +1321,83 @@ def isPM(request):
         return Response(status=status.HTTP_200_OK, data={"isPM": False})
     else:
         return Response(status=status.HTTP_200_OK, data={"isPM": True})
+
+
+@api_view(["GET"])
+def isGL(request):
+    # eid = ValidToken(request.headers.get("Authorization"))
+    eid = 2
+    if type(eid) == Response:
+        return eid
+    try:
+        emp = Employee.objects.get(id=eid)
+    except:
+        return Response(status=status.HTTP_200_OK, data={"isGL": False})
+    try:
+        o = Order.objects.get(id=emp.dept.parent)
+        if o.parent == "viceCEO":
+            return Response(status=status.HTTP_200_OK, data={"isGL": True})
+    except ObjectDoesNotExist:
+        return Response(status=status.HTTP_200_OK, data={"isGL": False})
+    return Response(status=status.HTTP_200_OK, data={"isGL": False})
+
+@api_view(["GET"])
+def isDL(request):
+    # eid = ValidToken(request.headers.get("Authorization"))
+    eid = 2
+    if type(eid) == Response:
+        return eid
+    try:
+        emp = Employee.objects.get(id=eid)
+    except:
+        return Response(status=status.HTTP_200_OK, data={"isDL": False})
+    try:
+        o = Order.objects.get(id=emp.dept_id)
+        if o.parent == "viceCEO":
+            return Response(status=status.HTTP_200_OK, data={"isDL": True})
+    except ObjectDoesNotExist:
+        return Response(status=status.HTTP_200_OK, data={"isDL": False})
+    return Response(status=status.HTTP_200_OK, data={"isDL": False})
+
+
+@api_view(["GET"])
+def isViceCEO(request):
+    # eid = ValidToken(request.headers.get("Authorization"))
+    eid = 2
+    if type(eid) == Response:
+        return eid
+    try:
+        viceCEO = SupervisorInfo.objects.get(eid=eid,dept="viceCEO")
+        return Response(status=status.HTTP_200_OK, data={"isViceCEO": True})
+    except SupervisorInfo.DoesNotExist:
+        return Response(status=status.HTTP_200_OK, data={"isViceCEO": False})
+    return Response(status=status.HTTP_200_OK, data={"isViceCEO": False})
+
+@api_view(["GET"])
+def isCEO(request):
+    # eid = ValidToken(request.headers.get("Authorization"))
+    eid = 2
+    if type(eid) == Response:
+        return eid
+    try:
+        ceo = SupervisorInfo.objects.get(eid=eid,dept="A3") #test 待改
+        return Response(status=status.HTTP_200_OK, data={"isCEO": True})
+    except SupervisorInfo.DoesNotExist:
+        return Response(status=status.HTTP_200_OK, data={"isCEO": False})
+    return Response(status=status.HTTP_200_OK, data={"isCEO": False})
+
+@api_view(["GET"])
+def isChairman(request):
+    # eid = ValidToken(request.headers.get("Authorization"))
+    eid = 2
+    if type(eid) == Response:
+        return eid
+    try:
+        chairman = SupervisorInfo.objects.get(eid=eid,dept="A4") #test 待改
+        return Response(status=status.HTTP_200_OK, data={"isChairman": True})
+    except SupervisorInfo.DoesNotExist:
+        return Response(status=status.HTTP_200_OK, data={"isChairman": False})
+    return Response(status=status.HTTP_200_OK, data={"isChairman": False})
 
 
 def apiData(request):

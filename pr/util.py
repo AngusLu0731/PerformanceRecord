@@ -40,7 +40,7 @@ def msg(string):
 def orderData():
     r = requests.get("https://soic.org.tw/v1/department")
     if r.status_code == 200:
-        rList = json.loads(r)
+        rList = json.loads(r.text).get("data")
         orderList = list()
         for rDict in rList:
             try:
@@ -53,7 +53,8 @@ def orderData():
                 orderList.append(data)
                 print(data)
             except KeyError:
-                print("error: " + rDict)
+                print("error: ")
+                print(rDict)
         print(orderList)
         Order.objects.bulk_create(orderList)
     else:
@@ -63,7 +64,7 @@ def orderData():
 def projectData():
     r = requests.get("https://soic.org.tw/v1/project")
     if r.status_code == 200:
-        rList = json.loads(r)
+        rList = json.loads(r.text).get("data")
         projectList = list()
         for rDict in rList:
             try:
@@ -79,7 +80,8 @@ def projectData():
                     projectList.append(data)
                     print(data)
             except KeyError:
-                print("error: " + rDict)
+                print("error: ")
+                print(rDict)
         print(projectList)
         Project.objects.bulk_create(projectList)
     else:
@@ -89,7 +91,7 @@ def projectData():
 def userData():
     r = requests.get("https://soic.org.tw/v1/user")
     if r.status_code == 200:
-        rList = json.loads(r)
+        rList = json.loads(r.text).get("data")
         userList = list()
         for rDict in rList:
             try:
@@ -107,7 +109,8 @@ def userData():
                             "doneNormalPR": False, "creditStatus": rDict["department"]}
                 userList.append(data)
             except KeyError:
-                print("error: " + rDict)
+                print("error: ")
+                print(rDict)
         print(userList)
         Employee.objects.bulk_create(userList)
     else:
