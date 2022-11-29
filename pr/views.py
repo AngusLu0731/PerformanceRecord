@@ -9,7 +9,7 @@ from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecor
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
     ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer
-from pr.util import msg, ValidToken
+from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData
 
 roleid = 6
 @swagger_auto_schema(
@@ -97,7 +97,7 @@ def employee(request):
 )
 @api_view(['POST', 'GET'])
 def projectPR(request):
-    # eid = ValidToken(request.headers.get("Authorization"))
+    # eid = ValidToken(request.headers.get("data"))
     eid = 1
     if type(eid) == Response:
         return eid
@@ -117,7 +117,8 @@ def projectPR(request):
         proportion = request.data["proportion"]
         score = request.data["score"]
         data = {"eid": eid, "workProject": workProject, "workDirection": workDirection,
-                "proportion": proportion, "belongProject": belongProject, "status": "pm", "score": score}
+                "proportion": proportion, "belongProject": belongProject, "status": "pm",
+                "score": score, "done": "none"}
         serializer = ProjectPRSerializer(data=data)
         serializerPro = ProjectSerializer(project, data={"done": True}, partial=True)
         if serializer.is_valid() and serializerPro.is_valid():
@@ -126,7 +127,6 @@ def projectPR(request):
             return Response(status=status.HTTP_201_CREATED, data=serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=msg(serializer.errors))
-
     if request.method == 'GET':
         project = ProjectPR.objects.filter(eid=eid)
         if len(project) == 0:
@@ -271,7 +271,7 @@ def projectPRRetrieve(request, pk):
 @api_view(['POST', 'GET'])
 def normalPR(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 4
+    eid = 2
     if type(eid) == Response:
         return eid
     if request.method == 'POST':
@@ -292,10 +292,12 @@ def normalPR(request):
         isSupervisor = SupervisorInfo.objects.filter(eid=eid)
         if len(isSupervisor)>0:
             data = {"eid": eid, "workQuality": workQuality, "workAmount": workAmount,
-                    "coordination": coordination, "learning": learning, "status": emp.dept.parent, "score": score}
+                    "coordination": coordination, "learning": learning, "status": emp.dept.parent,
+                    "score": score, "done": "none"}
         else:
             data = {"eid": eid, "workQuality": workQuality, "workAmount": workAmount,
-                "coordination": coordination, "learning": learning, "status": emp.dept_id, "score": score}
+                "coordination": coordination, "learning": learning, "status": emp.dept_id,
+                    "score": score, "done": "none"}
         serializer = NormalPRSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -623,7 +625,7 @@ def projectReviewRecord(request, pk):
 @api_view(['GET', 'POST'])
 def projectReviewRecordList(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 4
+    eid = 6
     if type(eid) == Response:
         return eid
     if request.method == 'POST':
@@ -644,9 +646,9 @@ def projectReviewRecordList(request):
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data=msg("非此專案PM無法評分"))
             try:
                 isSupervisor = SupervisorInfo.objects.get(eid=pPR.eid_id)
-                serializerPPR = ProjectPRSerializer(pPR, data={"status": pPR.eid.dept.parent}, partial=True)
+                serializerPPR = ProjectPRSerializer(pPR, data={"done": pPR.eid.dept.parent}, partial=True)
             except SupervisorInfo.DoesNotExist:
-                serializerPPR = ProjectPRSerializer(pPR, data={"status": pPR.eid.dept_id}, partial=True)
+                serializerPPR = ProjectPRSerializer(pPR, data={"done": pPR.eid.dept_id}, partial=True)
             if serializer.is_valid() and serializerPPR.is_valid():
                 serializer.save()
                 serializerPPR.save()
@@ -663,9 +665,9 @@ def projectReviewRecordList(request):
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data=msg("非目前可評分主管"))
             chairman = ("A3", "viceCEO")
             if pPR.status == "A3" and emp.dept_id in chairman:
-                serializerPPR = ProjectPRSerializer(pPR, data={"status": "A4"}, partial=True)
+                serializerPPR = ProjectPRSerializer(pPR, data={"done": "A4"}, partial=True)
             else:
-                serializerPPR = ProjectPRSerializer(pPR, data={"status": o.parent}, partial=True)
+                serializerPPR = ProjectPRSerializer(pPR, data={"done": o.parent}, partial=True)
             if serializer.is_valid() and serializerPPR.is_valid():
                 serializer.save()
                 serializerPPR.save()
@@ -791,7 +793,7 @@ def normalReviewRecord(request, pk):
 @api_view(['GET', 'POST'])
 def normalReviewRecordList(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 4
+    eid = 3
     if type(eid) == Response:
         return eid
     try:
@@ -818,9 +820,9 @@ def normalReviewRecordList(request):
             return Response(status=status.HTTP_401_UNAUTHORIZED, data=msg("非目前可評分主管"))
         chairman = ("A3", "viceCEO")
         if nPR.status == "A3" and emp.dept_id in chairman:
-            serializerNPR = NormalPRSerializer(nPR, data={"status": "A4"}, partial=True)
+            serializerNPR = NormalPRSerializer(nPR, data={"done": "A4"}, partial=True)
         else:
-            serializerNPR = NormalPRSerializer(nPR, data={"status": o.parent}, partial=True)
+            serializerNPR = NormalPRSerializer(nPR, data={"done": o.parent}, partial=True)
         if serializer.is_valid() and serializerNPR.is_valid():
             serializer.save()
             serializerNPR.save()
@@ -1192,7 +1194,7 @@ def annotation(request):
         return Response(status=status.HTTP_404_NOT_FOUND, data=msg("當前使用者非主管職"))
     if request.method == "POST":
         content = request.data["content"]
-        viceCEOList = ("海洋產業處","船舶產業處") # test 待改成部門id
+        viceCEOList = ("S0X","O0X")
         if isSupervisor.dept_id in viceCEOList or isSupervisor.dept.parent in viceCEOList:
             serializer = AnnotationSerializer(data={"giveDept": isSupervisor.dept_id,
                                                 "content": content,
@@ -1381,7 +1383,7 @@ def isCEO(request):
     if type(eid) == Response:
         return eid
     try:
-        ceo = SupervisorInfo.objects.get(eid=eid,dept="A3") #test 待改
+        ceo = SupervisorInfo.objects.get(eid=eid,dept="S0A")
         return Response(status=status.HTTP_200_OK, data={"isCEO": True})
     except SupervisorInfo.DoesNotExist:
         return Response(status=status.HTTP_200_OK, data={"isCEO": False})
@@ -1394,12 +1396,20 @@ def isChairman(request):
     if type(eid) == Response:
         return eid
     try:
-        chairman = SupervisorInfo.objects.get(eid=eid,dept="A4") #test 待改
+        chairman = SupervisorInfo.objects.get(eid=eid,dept="CM")
         return Response(status=status.HTTP_200_OK, data={"isChairman": True})
     except SupervisorInfo.DoesNotExist:
         return Response(status=status.HTTP_200_OK, data={"isChairman": False})
     return Response(status=status.HTTP_200_OK, data={"isChairman": False})
 
-
+@api_view(["POST"])
 def apiData(request):
-    pass
+    if request.method == "POST":
+        # if orderData():
+        #     if userData():
+        #         if projectData():
+        #             supervisorData()
+        # orderData()
+        # userData()
+        projectData()
+        return Response(status=status.HTTP_200_OK,data=msg("done"))

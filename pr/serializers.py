@@ -14,14 +14,15 @@ class ProjectPRSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPR
         fields = ("id", "eid", "belongProject", "workProject",
-                  "workDirection", "proportion", "status", "score")
+                  "workDirection", "proportion", "status", "score",
+                  "done")
 
 
 class NormalPRSerializer(serializers.ModelSerializer):
     class Meta:
         model = NormalPR
         fields = ("id", "eid", "workQuality", "workAmount",
-                  "coordination", "learning", "status", "score")
+                  "coordination", "learning", "status", "score", "done")
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -57,19 +58,19 @@ class SupervisorInfoSerializer(serializers.ModelSerializer):
 class CreditRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreditRecord
-        fields = ("giver", "receiver", "grade", "credit")
+        fields = ("giver", "receiver", "grade", "credit", "id")
 
 
 class CreditDistributionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreditDistribution
-        fields = ("giveDept", "receiveDept", "creditDept")
+        fields = ("giveDept", "receiveDept", "creditDept", "id")
 
 
 class AnnotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Annotation
-        fields = ("giveDept", "content", "status")
+        fields = ("giveDept", "content", "status", "id")
 
 
 class AttendanceRecordSerializer(serializers.ModelSerializer):
@@ -96,7 +97,7 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         return obj.dept.name
 
     def get_projectScore(self, obj):
-        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
+        ceo = SupervisorInfo.objects.get(dept__id="S0A")
         prSet = ProjectPR.objects.filter(eid=obj.id)
         if len(prSet) > 0:
             pr = prSet[0]
@@ -108,7 +109,7 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         return ""
 
     def get_normalScore(self, obj):
-        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
+        ceo = SupervisorInfo.objects.get(dept__id="S0A")
         prSet = ProjectPR.objects.filter(eid=obj.id)
         if len(prSet) > 0:
             pr = prSet[0]
@@ -145,13 +146,13 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
 
     def get_ceo(self, obj):
         data = ""
-        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
+        ceo = SupervisorInfo.objects.get(dept__id="S0A")
         data = creditFind(ceo.eid_id, obj.id, data)
         return data
 
     def get_chairman(self, obj):
         data = ""
-        chairman = SupervisorInfo.objects.get(dept__id="A4")  # test用
+        chairman = SupervisorInfo.objects.get(dept__id="CM")
         data = creditFind(chairman.eid_id, obj.id, data)
         return data
 
@@ -161,8 +162,9 @@ class ProjectPRGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectPR
-        fields = ("id", "eid", "belongProject", "workProject",
-                  "workDirection", "proportion", "status", "score", "pName")
+        fields = ("id", "eid", "belongProject", "workProject", "done",
+                  "workDirection", "proportion", "status", "score",
+                  "pName")
 
     def get_pName(self, obj):
         return obj.belongProject.pname
@@ -183,7 +185,7 @@ class ProjectNeedRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPR
         fields = ("id", "eid", "belongProject", "workProject",
-                  "workDirection", "proportion", "status", "score",
+                  "workDirection", "proportion", "status", "score", "done",
                   "eName", "dept", "deptName", "pName", "pm",
                   "gl", "dl", "viceCEO", "ceo", "chairman")
 
@@ -255,7 +257,7 @@ class NormalNeedRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = NormalPR
         fields = ("id", "eid", "workQuality", "workAmount",
-                  "coordination", "learning", "status", "score", "eName",
+                  "coordination", "learning", "status", "score", "eName", "done",
                   "dept", "deptName", "gl", "dl", "viceCEO", "ceo", "chairman")
 
     def get_eName(self, obj):
@@ -344,7 +346,7 @@ def viceCEOPoint(data, rec):
 
 def cEOPoint(data, rec):
     try:
-        ceo = SupervisorInfo.objects.get(dept__id="A3")  # test用
+        ceo = SupervisorInfo.objects.get(dept__id="S0A")
         ceoRecord = rec.get(reviewer=ceo.eid_id)
         data["point"] = ceoRecord.point
         data["content"] = ceoRecord.content
@@ -356,7 +358,7 @@ def cEOPoint(data, rec):
 
 def chairmanPoint(data, rec):
     try:
-        chairman = SupervisorInfo.objects.get(dept__id="A4")  # test用
+        chairman = SupervisorInfo.objects.get(dept__id="CM")
         chairmanRecord = rec.get(reviewer=chairman.eid_id)
         data["point"] = chairmanRecord.point
         data["content"] = chairmanRecord.content

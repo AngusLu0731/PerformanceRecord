@@ -25,6 +25,7 @@ class ProjectPR(models.Model):
     proportion = models.TextField(blank=True)
     status = models.TextField()  # pm-> 待PM審核
     score = models.TextField()
+    done = models.TextField()  # none->未審核
 
     class Meta:
         db_table = "projectPR"
@@ -39,6 +40,7 @@ class NormalPR(models.Model):
     learning = models.TextField(blank=True)
     status = models.TextField()
     score = models.TextField()
+    done = models.TextField()
 
     class Meta:
         db_table = "normalPR"

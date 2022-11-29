@@ -7,15 +7,13 @@ from pr.models import Order, Project, Employee, SupervisorInfo
 
 
 def ValidToken(token):
-    r = requests.post("https://soic.org.tw/v1/token/verify", headers=token)
+    r = requests.post("https://basic-service.sekixu.dev/api/v1/token/verify", data={"token": token["access"]})
     if r.status_code == 401:
-        refreshDict = json.loads(r.text).get("data")
-        token = refreshDict["refresh"]
-        refresh = requests.post("https://soic.org.tw/v1/token/refresh", headers=token)
-        refreshDict = json.loads(refresh.text).get("data")
+        refresh = requests.post("https://soic.org.tw/v1/token/refresh", headers=token["refresh"])
+        refreshDict = json.loads(refresh.text).get("data").get("payload")
         token = refreshDict["access"]
-        r = requests.post("https://soic.org.tw/v1/token/verify", headers=token)
-        rDict = json.loads(r.text).get("data")
+        r = requests.post("https://basic-service.sekixu.dev/api/v1/token/verify", data={"token": token["access"]})
+        rDict = json.loads(r.text).get("data").get("payload")
         try:
             ret = rDict["username"]
             return ret
@@ -44,7 +42,6 @@ def orderData():
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
         orderList = list()
-        print(rList)
         for rDict in rList:
             try:
                 name = rDict["name"]
@@ -52,24 +49,29 @@ def orderData():
                 parent = rDict["parent_code"]
                 if name == "船舶產業處" or name == "海洋產業處":
                     parent = "viceCEO"
+                if parent is None:
+                    parent = "done"
                 data = {"name": name, "dept": dept, "parent": parent}
                 orderList.append(data)
             except KeyError:
                 print("error: ")
                 print(rDict)
-        orderList.append({"name": "副執行長室", "dept": "viceCEO", "parent": "執行長室"})
+        orderList.append({"name": "副執行長室", "dept": "viceCEO", "parent": "S0A"})
         print(orderList)
-        Order.objects.bulk_create(orderList)
+        batch = [Order(name=row["name"], parent=row["parent"], id=row["dept"]) for row in orderList]
+        Order.objects.bulk_create(batch)
+        return True
     else:
         print("get order api錯誤")
+        return False
 
 
 def projectData():
     r = requests.get("https://basic-service.sekixu.dev/api/v1/project")
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
-        print(rList)
         projectList = list()
+        pmid = ""
         for rDict in rList:
             try:
                 pname = rDict["name"]
@@ -82,21 +84,23 @@ def projectData():
                     data = {"pname": pname, "pid": pid, "pmid": pmid,
                             "eid_id": member["username"]}
                     projectList.append(data)
-                    print(data)
             except KeyError:
                 print("error: ")
                 print(rDict)
         print(projectList)
-        Project.objects.bulk_create(projectList)
+        batch = [Project(pname=row["pname"], pid=row["pid"], pmid=row["pmid"],
+                         eid=row["eid_id"]) for row in projectList]
+        Project.objects.bulk_create(batch)
+        return True
     else:
         print("get project api錯誤")
+        return False
 
 
 def userData():
     r = requests.get("https://basic-service.sekixu.dev/api/v1/hr/user")
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
-        print(rList)
         userList = list()
         for rDict in rList:
             try:
@@ -108,19 +112,24 @@ def userData():
                                 "dept": rDict["department_code"], "needPR": False,
                                 "doneNormalPR": False, "creditStatus": o.parent}
                     except Order.DoesNotExist:
-                        print("抓order錯誤"+rDict)
-                    data = {"id": rDict["username"], "name": rDict["name"],
-                            "dept": rDict["department"], "needPR": False,
-                            "doneNormalPR": False, "creditStatus": rDict["department"]}
-                userList.append(data)
+                        print("抓order錯誤" + rDict)
+                        data = {"id": rDict["username"], "name": rDict["name"],
+                                "dept": rDict["department"], "needPR": False,
+                                "doneNormalPR": False, "creditStatus": rDict["department"]}
+                    userList.append(data)
             except KeyError:
                 print("error: ")
                 print(rDict)
         print(userList)
-        Employee.objects.bulk_create(userList)
+        batch = [Employee(id=row["id"], name=row["name"], dept=row["dept"],
+                          needPR=row["needPR"], doneNormalPR=row["doneNormalPR"],
+                          creditStatus=row["creditStatus"]) for row in userList]
+        Employee.objects.bulk_create(batch)
+        return True
     else:
-        print("get user api錯誤")
         print(r.status_code)
+        print("get user api錯誤")
+        return False
 
 
 def supervisorData():
@@ -137,9 +146,11 @@ def supervisorData():
             except KeyError:
                 print("error: ")
                 print(rDict)
-        supervisorList.append({"eid": "副執行長id", "dept": "viceCEO"})
+        supervisorList.append({"eid": "107", "dept": "viceCEO"})
         print(supervisorList)
-        SupervisorInfo.objects.bulk_create(supervisorList)
+        batch = [SupervisorInfo(eid=row["eid"], dept=row["dept"]) for row in supervisorList]
+        SupervisorInfo.objects.bulk_create(batch)
+        return True
     else:
-        print("get order api錯誤")
-
+        print("get supervisor api錯誤")
+        return False
