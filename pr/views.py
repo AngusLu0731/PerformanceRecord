@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecord, NormalReviewRecord, SupervisorInfo, \
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord
-from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
+from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, AnnotationGetSerializer
     ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer
 from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
 
