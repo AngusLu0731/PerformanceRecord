@@ -1402,13 +1402,35 @@ def isChairman(request):
         return Response(status=status.HTTP_200_OK, data={"isChairman": False})
     return Response(status=status.HTTP_200_OK, data={"isChairman": False})
 
+@api_view(["GET"])
+def CreditDept():
+    # eid = ValidToken(request.headers.get("Authorization"))
+    eid = 2
+    if type(eid) == Response:
+        return eid
+    try:
+        isSupervisor = SupervisorInfo.objects.get(eid=eid)
+    except SupervisorInfo.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND, data=msg("當前使用者非主管職"))
+    o = Order.objects.filter(parent=isSupervisor.dept_id)
+    if len(o) == 0:
+        return Response(status=status.HTTP_404_NOT_FOUND, data=msg("無子部門"))
+    else:
+        deptList = list()
+        for i in o:
+            data = {"dept": i.id, "deptName": i.Name}
+            deptList.append(data)
+        return Response(status=status.HTTP_200_OK, data={"data": deptList})
+
 @api_view(["POST"])
-def apiData(request):
+def apiData(request,pk):
     if request.method == "POST":
-        # orderData()
-        # supervisorData()
-        # userData()
-        # projectData()
-        # excel()
-        # haveProject()
-        return Response(status=status.HTTP_200_OK,data=msg("done"))
+        if pk == 123888123:
+            orderData()
+            supervisorData()
+            userData()
+            projectData()
+            excel()
+            haveProject()
+            return Response(status=status.HTTP_200_OK,data=msg("done"))
+        return Response(status=status.HTTP_200_OK, data=msg("error"))
