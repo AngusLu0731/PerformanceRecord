@@ -486,7 +486,7 @@ def needRecord(request):
         isSupervisor = SupervisorInfo.objects.get(eid=eid)
     except SupervisorInfo.DoesNotExist:
         if len(projectNeedRecordList) > 0:
-            return Response(status=status.HTTP_200_OK, data={"projectNeedRecord": projectNeedRecordList})
+            return Response(status=status.HTTP_200_OK, data={"projectPR": projectNeedRecordList})
         else:
             return Response(status=status.HTTP_200_OK, data=msg("無可評分考績"))
     proPRList = ProjectPR.objects.filter(status=isSupervisor.dept_id)
@@ -1406,9 +1406,9 @@ def isChairman(request):
 def apiData(request):
     if request.method == "POST":
         # orderData()
+        # supervisorData()
         # userData()
         # projectData()
-        # supervisorData()
         # excel()
         # haveProject()
         return Response(status=status.HTTP_200_OK,data=msg("done"))

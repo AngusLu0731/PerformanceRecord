@@ -93,14 +93,14 @@ def projectData():
                         break
                 for member in rDict["members"]:
                     data = {"pname": pname, "pid": pid, "pmid": pmid,
-                            "eid_id": member["username"]}
+                            "eid_id": member["username"], "done": False}
                     projectList.append(data)
             except KeyError:
                 print("error: ")
                 print(rDict)
         print(projectList)
         batch = [Project(pname=row["pname"], pid=row["pid"], pmid=row["pmid"],
-                         eid=row["eid_id"]) for row in projectList]
+                         eid_id=row["eid_id"], done=row["done"]) for row in projectList]
         Project.objects.bulk_create(batch)
         print("-" * 20)
         print("專案資料匯入結束")
@@ -119,8 +119,10 @@ def userData():
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
         userList = list()
+        for i in rList:
+            print(i)
         for rDict in rList:
-            try:
+            if rDict["username"] != 'test':  #test
                 isSupervisor = SupervisorInfo.objects.filter(eid=rDict["username"])
                 if len(isSupervisor) > 0:
                     try:
@@ -130,15 +132,13 @@ def userData():
                                 "doneNormalPR": False, "creditStatus": o.parent}
                     except Order.DoesNotExist:
                         print("抓order錯誤" + rDict)
-                        data = {"id": rDict["username"], "name": rDict["name"],
-                                "dept": rDict["department"], "needPR": False,
-                                "doneNormalPR": False, "creditStatus": rDict["department"]}
-                    userList.append(data)
-            except KeyError:
-                print("error: ")
-                print(rDict)
+                else:
+                    data = {"id": rDict["username"], "name": rDict["name"],
+                            "dept": rDict["department_code"], "needPR": False,
+                            "doneNormalPR": False, "creditStatus": rDict["department_code"]}
+                userList.append(data)
         print(userList)
-        batch = [Employee(id=row["id"], name=row["name"], dept=row["dept"],
+        batch = [Employee(id=row["id"], name=row["name"], dept_id=row["dept"],
                           needPR=row["needPR"], doneNormalPR=row["doneNormalPR"],
                           creditStatus=row["creditStatus"]) for row in userList]
         Employee.objects.bulk_create(batch)
@@ -171,7 +171,7 @@ def supervisorData():
                 print(rDict)
         supervisorList.append({"eid": "107", "dept": "viceCEO"})
         print(supervisorList)
-        batch = [SupervisorInfo(eid=row["eid"], dept=row["dept"]) for row in supervisorList]
+        batch = [SupervisorInfo(eid_id=row["eid"], dept_id=row["dept"]) for row in supervisorList]
         SupervisorInfo.objects.bulk_create(batch)
         print("-" * 20)
         print("主管資料匯入結束")
