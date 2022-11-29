@@ -39,7 +39,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class ProjectReviewRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectReviewRecord
-        fields = ("pid", "reviewer", "point", "content", "proportion")
+        fields = ("pid", "reviewer", "point", "content", "proportion", "id")
 
 
 class NormalReviewRecordSerializer(serializers.ModelSerializer):

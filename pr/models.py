@@ -45,11 +45,11 @@ class NormalPR(models.Model):
 
 
 class Project(models.Model):
-    id = models.TextField(primary_key=True)
     eid = models.ForeignKey('Employee', on_delete=models.RESTRICT)
     pmid = models.TextField()
     done = models.BooleanField()
     pname = models.TextField(blank=True)
+    pid = models.TextField()
 
     class Meta:
         db_table = "project"

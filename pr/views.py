@@ -11,7 +11,7 @@ from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSeri
     ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer
 from pr.util import msg, ValidToken
 
-
+roleid = 6
 @swagger_auto_schema(
     method='GET',
     operation_summary="查看單一員工訊息",
@@ -105,7 +105,7 @@ def projectPR(request):
         try:
             belongProject = request.data["belongProject"]
             emp = Employee.objects.get(id=eid)
-            project = Project.objects.get(eid_id=eid, id=belongProject, done=False)
+            project = Project.objects.get(eid_id=eid, pid=belongProject, done=False)
         except Employee.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND, data=msg("員工號不存在"))
         except Project.DoesNotExist:
@@ -475,7 +475,7 @@ def needRecord(request):
     projectNeedRecordList = []
     for p in pids:
         try:
-            proPR = ProjectPR.objects.get(belongProject=p.id, status="pm")
+            proPR = ProjectPR.objects.get(belongProject=p.pid, status="pm")
         except ProjectPR.DoesNotExist:
             continue
         serializer = ProjectNeedRecordSerializer(proPR)
@@ -639,7 +639,7 @@ def projectReviewRecordList(request):
         except ProjectPR.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND, data=msg("無此考績可評分"))
         if pPR.status == "pm":
-            p = Project.objects.filter(eid=pPR.eid_id, id=pPR.belongProject_id, pmid=eid)
+            p = Project.objects.filter(eid=pPR.eid_id, pid=pPR.belongProject_id, pmid=eid)
             if len(p) == 0:
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data=msg("非此專案PM無法評分"))
             try:
@@ -1311,9 +1311,10 @@ def attendanceRecord(request):
     serializer = AttendanceRecordSerializer(ar)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
+@api_view(["GET"])
 def isPM(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = roleid
     if type(eid) == Response:
         return eid
     pm = Project.objects.filter(pmid=eid)
@@ -1326,7 +1327,7 @@ def isPM(request):
 @api_view(["GET"])
 def isGL(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = roleid
     if type(eid) == Response:
         return eid
     try:
@@ -1344,7 +1345,7 @@ def isGL(request):
 @api_view(["GET"])
 def isDL(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = roleid
     if type(eid) == Response:
         return eid
     try:
@@ -1363,7 +1364,7 @@ def isDL(request):
 @api_view(["GET"])
 def isViceCEO(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = roleid
     if type(eid) == Response:
         return eid
     try:
@@ -1376,7 +1377,7 @@ def isViceCEO(request):
 @api_view(["GET"])
 def isCEO(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = roleid
     if type(eid) == Response:
         return eid
     try:
@@ -1389,7 +1390,7 @@ def isCEO(request):
 @api_view(["GET"])
 def isChairman(request):
     # eid = ValidToken(request.headers.get("Authorization"))
-    eid = 2
+    eid = roleid
     if type(eid) == Response:
         return eid
     try:
