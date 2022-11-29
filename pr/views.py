@@ -1403,7 +1403,7 @@ def isChairman(request):
     return Response(status=status.HTTP_200_OK, data={"isChairman": False})
 
 @api_view(["GET"])
-def CreditDept():
+def CreditDept(request):
     # eid = ValidToken(request.headers.get("Authorization"))
     eid = 2
     if type(eid) == Response:
@@ -1418,7 +1418,7 @@ def CreditDept():
     else:
         deptList = list()
         for i in o:
-            data = {"dept": i.id, "deptName": i.Name}
+            data = {"dept": i.id, "deptName": i.name}
             deptList.append(data)
         return Response(status=status.HTTP_200_OK, data={"data": deptList})
 
