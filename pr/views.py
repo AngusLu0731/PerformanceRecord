@@ -1215,7 +1215,7 @@ def annotation(request):
             anno = Annotation.objects.all()
         if len(anno) == 0:
             return Response(status=status.HTTP_404_NOT_FOUND, data=msg("無當前可查看備註"))
-        serializer = AnnotationSerializer(anno, many=True)
+        serializer = AnnotationGetSerializer(anno, many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 

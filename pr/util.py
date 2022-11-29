@@ -12,7 +12,7 @@ from pr.serializers import EmployeeSerializer
 def ValidToken(token):
     r = requests.post("https://basic-service.sekixu.dev/api/v1/token/verify", data={"token": token["access"]})
     if r.status_code == 401:
-        refresh = requests.post("https://soic.org.tw/v1/token/refresh", headers=token["refresh"])
+        refresh = requests.post("https://soic.org.tw/v1/token/refresh", data=token["refresh"])
         refreshDict = json.loads(refresh.text).get("data")
         r = requests.post("https://basic-service.sekixu.dev/api/v1/token/verify", data={"token": refreshDict["access"]})
         rDict = json.loads(r.text).get("data").get("payload")

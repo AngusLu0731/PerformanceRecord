@@ -73,6 +73,24 @@ class AnnotationSerializer(serializers.ModelSerializer):
         fields = ("giveDept", "content", "status", "id")
 
 
+class AnnotationGetSerializer(serializers.ModelSerializer):
+    deptName = serializers.SerializerMethodField()
+    supervisorName = serializers.SerializerMethodField()
+    class Meta:
+        model = Annotation
+        fields = ("giveDept", "content", "status", "id", "deptName", "supervisorName")
+
+    def get_deptName(self, obj):
+        return obj.giveDept.name
+
+    def get_supervisorName(self, obj):
+        try:
+            s = SupervisorInfo.objects.get(dept=obj.giveDept)
+            return s.eid.name
+        except ObjectDoesNotExist:
+            return ""
+
+
 class AttendanceRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = AttendanceRecord
