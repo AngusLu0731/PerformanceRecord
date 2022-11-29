@@ -9,7 +9,7 @@ from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecor
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
     ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer
-from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel
+from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
 
 roleid = 6
 @swagger_auto_schema(
@@ -1405,12 +1405,10 @@ def isChairman(request):
 @api_view(["POST"])
 def apiData(request):
     if request.method == "POST":
-        # if orderData():
-        #     if userData():
-        #         if projectData():
-        #             supervisorData()
         # orderData()
         # userData()
         # projectData()
-        excel()
+        # supervisorData()
+        # excel()
+        # haveProject()
         return Response(status=status.HTTP_200_OK,data=msg("done"))

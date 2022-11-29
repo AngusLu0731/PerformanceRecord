@@ -6,15 +6,15 @@ import os
 from rest_framework import status
 from rest_framework.response import Response
 from pr.models import Order, Project, Employee, SupervisorInfo
+from pr.serializers import EmployeeSerializer
 
 
 def ValidToken(token):
     r = requests.post("https://basic-service.sekixu.dev/api/v1/token/verify", data={"token": token["access"]})
     if r.status_code == 401:
         refresh = requests.post("https://soic.org.tw/v1/token/refresh", headers=token["refresh"])
-        refreshDict = json.loads(refresh.text).get("data").get("payload")
-        token = refreshDict["access"]
-        r = requests.post("https://basic-service.sekixu.dev/api/v1/token/verify", data={"token": token["access"]})
+        refreshDict = json.loads(refresh.text).get("data")
+        r = requests.post("https://basic-service.sekixu.dev/api/v1/token/verify", data={"token": refreshDict["access"]})
         rDict = json.loads(r.text).get("data").get("payload")
         try:
             ret = rDict["username"]
@@ -40,6 +40,9 @@ def msg(string):
 
 
 def orderData():
+    print("-" * 20)
+    print("順序資料匯入開始")
+    print("-" * 20)
     r = requests.get("https://basic-service.sekixu.dev/api/v1/hr/department")
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
@@ -62,6 +65,9 @@ def orderData():
         print(orderList)
         batch = [Order(name=row["name"], parent=row["parent"], id=row["dept"]) for row in orderList]
         Order.objects.bulk_create(batch)
+        print("-" * 20)
+        print("順序資料匯入結束")
+        print("-" * 20)
         return True
     else:
         print("get order api錯誤")
@@ -69,6 +75,9 @@ def orderData():
 
 
 def projectData():
+    print("-" * 20)
+    print("專案資料匯入開始")
+    print("-" * 20)
     r = requests.get("https://basic-service.sekixu.dev/api/v1/project")
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
@@ -93,6 +102,9 @@ def projectData():
         batch = [Project(pname=row["pname"], pid=row["pid"], pmid=row["pmid"],
                          eid=row["eid_id"]) for row in projectList]
         Project.objects.bulk_create(batch)
+        print("-" * 20)
+        print("專案資料匯入結束")
+        print("-" * 20)
         return True
     else:
         print("get project api錯誤")
@@ -100,6 +112,9 @@ def projectData():
 
 
 def userData():
+    print("-" * 20)
+    print("員工資料匯入開始")
+    print("-" * 20)
     r = requests.get("https://basic-service.sekixu.dev/api/v1/hr/user")
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
@@ -127,6 +142,9 @@ def userData():
                           needPR=row["needPR"], doneNormalPR=row["doneNormalPR"],
                           creditStatus=row["creditStatus"]) for row in userList]
         Employee.objects.bulk_create(batch)
+        print("-" * 20)
+        print("員工資料匯入結束")
+        print("-" * 20)
         return True
     else:
         print(r.status_code)
@@ -135,6 +153,9 @@ def userData():
 
 
 def supervisorData():
+    print("-" * 20)
+    print("主管資料匯入開始")
+    print("-" * 20)
     r = requests.get("https://basic-service.sekixu.dev/api/v1/hr/department")
     if r.status_code == 200:
         rList = json.loads(r.text).get("data")
@@ -152,6 +173,9 @@ def supervisorData():
         print(supervisorList)
         batch = [SupervisorInfo(eid=row["eid"], dept=row["dept"]) for row in supervisorList]
         SupervisorInfo.objects.bulk_create(batch)
+        print("-" * 20)
+        print("主管資料匯入結束")
+        print("-" * 20)
         return True
     else:
         print("get supervisor api錯誤")
@@ -159,17 +183,52 @@ def supervisorData():
 
 
 def excel():
-    wb = openpyxl.load_workbook("prsheet.xlsx")
+    print("-" * 20)
+    print("判斷是否需要考績開始")
+    print("-" * 20)
+    pwd = os.path.dirname(__file__)
+    wb = openpyxl.load_workbook(pwd + "/prsheet.xlsx")
     sheet = wb["list"]
     eidList = sheet["A"]
     prList = list()
-    for eid in eidList:
-        print(type(eid.value))
+    for v in eidList:
         try:
-            if type(eid.value) is str or type(eid.value) is int:
-                e = int(eid.value)
+            if type(v.value) is str or type(v.value) is int:
+                e = int(v.value)
                 prList.append(e)
         except ValueError or TypeError:
             pass
-    print(prList)
-    print(len(prList))
+    for e in prList:
+        try:
+            emp = Employee.objects.get(id=e)
+            serializer = EmployeeSerializer(emp, data={"needPR": True}, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                print("資料錯誤")
+        except Employee.DoesNotExist:
+            print("該員工不存在" + str(e))
+    print("-" * 20)
+    print("判斷是否需要考績結束")
+    print("-" * 20)
+
+
+def haveProject():
+    print("-" * 20)
+    print("判斷是否有專案開始")
+    print("-" * 20)
+    p = Project.objects.values("eid_id").distinct()
+    for i in p:
+        print(i["eid_id"])
+        try:
+            emp = Employee.objects.get(name=i["eid_id"])
+            serializer = EmployeeSerializer(emp, data={"doneNormalPR": True}, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                print("資料錯誤")
+        except Employee.DoesNotExist:
+            print("該員工不存在" + str(i["eid_id"]))
+    print("-" * 20)
+    print("判斷是否有專案結束")
+    print("-" * 20)
