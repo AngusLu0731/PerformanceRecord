@@ -124,11 +124,11 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         data = ""
         try:
             o = Order.objects.get(id=obj.dept.parent)
+            if o.parent == "viceCEO":
+                gl = SupervisorInfo.objects.get(dept=obj.dept)
+                data = creditFind(gl.eid_id, obj.id, data)
         except ObjectDoesNotExist:
             pass
-        if o.parent == "viceCEO":
-            gl = SupervisorInfo.objects.get(dept=obj.dept)
-            data = creditFind(gl.eid_id, obj.id, data)
         return data
 
     def get_dl(self, obj):
@@ -303,9 +303,6 @@ class NormalNeedRecordSerializer(serializers.ModelSerializer):
 def glPoint(data, rec, obj):
     try:
         o = Order.objects.get(id=obj.eid.dept.parent)
-    except ObjectDoesNotExist:
-        pass
-    try:
         if o.parent == "viceCEO":
             gl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
             glRecord = rec.get(reviewer=gl.eid_id)
