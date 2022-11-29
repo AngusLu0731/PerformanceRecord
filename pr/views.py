@@ -9,7 +9,7 @@ from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecor
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
     ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer
-from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData
+from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel
 
 roleid = 6
 @swagger_auto_schema(
@@ -1411,5 +1411,6 @@ def apiData(request):
         #             supervisorData()
         # orderData()
         # userData()
-        projectData()
+        # projectData()
+        excel()
         return Response(status=status.HTTP_200_OK,data=msg("done"))

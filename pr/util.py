@@ -1,5 +1,7 @@
 import requests
 import json
+import openpyxl
+import os
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -154,3 +156,20 @@ def supervisorData():
     else:
         print("get supervisor api錯誤")
         return False
+
+
+def excel():
+    wb = openpyxl.load_workbook("prsheet.xlsx")
+    sheet = wb["list"]
+    eidList = sheet["A"]
+    prList = list()
+    for eid in eidList:
+        print(type(eid.value))
+        try:
+            if type(eid.value) is str or type(eid.value) is int:
+                e = int(eid.value)
+                prList.append(e)
+        except ValueError or TypeError:
+            pass
+    print(prList)
+    print(len(prList))

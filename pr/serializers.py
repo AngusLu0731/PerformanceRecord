@@ -121,7 +121,7 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         return ""
 
     def get_gl(self, obj):
-        data = ""
+        data = {"credit": "", "id": ""}
         try:
             o = Order.objects.get(id=obj.dept.parent)
             if o.parent == "viceCEO":
@@ -132,26 +132,26 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         return data
 
     def get_dl(self, obj):
-        data = ""
+        data = {"credit": "", "id": ""}
         if obj.dept.parent != "viceCEO" and obj.dept_id != "viceCEO":
             dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
             data = creditFind(dl.eid_id, obj.id, data)
         return data
 
     def get_viceCEO(self, obj):
-        data = ""
+        data = {"credit": "", "id": ""}
         viceCEO = SupervisorInfo.objects.get(dept__id="viceCEO")
         data = creditFind(viceCEO.eid_id, obj.id, data)
         return data
 
     def get_ceo(self, obj):
-        data = ""
+        data = {"credit": "", "id": ""}
         ceo = SupervisorInfo.objects.get(dept__id="S0A")
         data = creditFind(ceo.eid_id, obj.id, data)
         return data
 
     def get_chairman(self, obj):
-        data = ""
+        data = {"credit": "", "id": ""}
         chairman = SupervisorInfo.objects.get(dept__id="CM")
         data = creditFind(chairman.eid_id, obj.id, data)
         return data
@@ -368,7 +368,8 @@ def chairmanPoint(data, rec):
 def creditFind(giver, receiver, data):
     try:
         c = CreditRecord.objects.get(giver=giver, receiver=receiver)
-        data = c.credit
+        data["credit"] = c.credit
+        data["id"] = c.id
     except ObjectDoesNotExist:
         pass
     return data
