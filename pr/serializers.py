@@ -76,7 +76,7 @@ class CreditDistributionGetSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_deptName(obj):
-        o = Order.objects.get(id=obj.giveDept)
+        o = Order.objects.get(id=obj.receiveDept)
         return o.name
 
 
@@ -171,7 +171,7 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         try:
             o = Order.objects.get(id=obj.dept.parent)
             AOX = ("A0S", "A0P", "A0M")
-            if o.parent == "viceCEO" or obj.eid.dept_id in AOX:
+            if o.parent == "viceCEO" or obj.dept_id in AOX:
                 gl = SupervisorInfo.objects.get(dept=obj.dept)
                 data = creditFind(gl.eid_id, obj.id, data)
         except ObjectDoesNotExist:
@@ -215,9 +215,9 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
 
     def get_isDL(self, obj):
         try:
+            d = ("S0X", "M0A", "Q0A", "O0X", "B0A", "A0X", "I0C")
             isSupervisor = SupervisorInfo.objects.get(id=obj.id)
-            o = Order.objects.get(id=isSupervisor.dept_id)
-            if o.parent == "viceCEO":
+            if isSupervisor.dept_id in d:
                 return True
         except ObjectDoesNotExist:
             return False
