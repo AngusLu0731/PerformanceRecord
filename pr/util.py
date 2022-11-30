@@ -20,18 +20,18 @@ def ValidToken(token):
             ret = rDict["username"]
             return ret
         except KeyError:
-            return Response(status=status.HTTP_401_UNAUTHORIZED, data="JWT認證錯誤")
+            return Response(status=status.HTTP_200_OK, data="JWT認證錯誤")
     elif r.status_code == 400:
-        return Response(status=status.HTTP_401_UNAUTHORIZED, data="JWT認證錯誤")
+        return Response(status=status.HTTP_200_OK, data="JWT認證錯誤")
     elif r.status_code == 200:
         rDict = json.loads(r.text).get("data").get("payload")
         try:
             ret = rDict["username"]
             return ret
         except KeyError:
-            return Response(status=status.HTTP_401_UNAUTHORIZED, data="JWT認證錯誤")
+            return Response(status=status.HTTP_200_OK, data="JWT認證錯誤")
     else:
-        return Response(status=status.HTTP_401_UNAUTHORIZED, data="JWT認證錯誤")
+        return Response(status=status.HTTP_200_OK, data="JWT認證錯誤")
 
 
 def msg(string):

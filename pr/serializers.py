@@ -335,10 +335,10 @@ def glPoint(data, rec, obj):
         AOX = ("A0S", "A0P", "A0M")
         if o.parent == "viceCEO" or obj.eid.dept_id in AOX:
             gl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
-            glRecord = rec.get(reviewer=gl.eid_id)
-            data["point"] = glRecord.point
-            data["content"] = glRecord.content
-            data["recordID"] = glRecord.id
+            glRecord = rec.filter(reviewer=gl.eid_id)
+            data["point"] = glRecord[len(glRecord)].point
+            data["content"] = glRecord[len(glRecord)].content
+            data["recordID"] = glRecord[len(glRecord)].id
             if type(obj) == ProjectPR:
                 data["proportion"] = glRecord.proportion
     except ObjectDoesNotExist:
@@ -351,19 +351,19 @@ def dlPoint(data, rec, obj):
     if obj.eid.dept.parent in d:
         try:
             dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept.parent)
-            dlRecord = rec.get(reviewer=dl.eid_id)
-            data["point"] = dlRecord.point
-            data["content"] = dlRecord.content
-            data["recordID"] = dlRecord.id
+            dlRecord = rec.filter(reviewer=dl.eid_id)
+            data["point"] = dlRecord[len(dlRecord)].point
+            data["content"] = dlRecord[len(dlRecord)].content
+            data["recordID"] = dlRecord[len(dlRecord)].id
         except ObjectDoesNotExist:
             pass
-    if obj.eid.dept in d:
+    if obj.eid.dept_id in d:
         try:
-            dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept)
-            dlRecord = rec.get(reviewer=dl.eid_id)
-            data["point"] = dlRecord.point
-            data["content"] = dlRecord.content
-            data["recordID"] = dlRecord.id
+            dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
+            dlRecord = rec.filter(reviewer=dl.eid_id)
+            data["point"] = dlRecord[len(dlRecord)].point
+            data["content"] = dlRecord[len(dlRecord)].content
+            data["recordID"] = dlRecord[len(dlRecord)].id
         except ObjectDoesNotExist:
             pass
     return data
