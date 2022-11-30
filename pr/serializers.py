@@ -112,7 +112,7 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = (
-        "id", "name", "deptName", "projectScore", "normalScore", "gl", "dl", "viceCEO", "ceo", "chairman", "isDL")
+            "id", "name", "deptName", "projectScore", "normalScore", "gl", "dl", "viceCEO", "ceo", "chairman", "isDL")
 
     def get_deptName(self, obj):
         return obj.dept.name
@@ -130,7 +130,7 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         return ""
 
     def get_normalScore(self, obj):
-        ceo = SupervisorInfo.objects.get(dept__id="S0A")
+        ceo = SupervisorInfo.objects.get(dept_id="S0A")
         prSet = ProjectPR.objects.filter(eid=obj.id)
         if len(prSet) > 0:
             pr = prSet[0]
@@ -145,7 +145,8 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         data = {"credit": "", "id": ""}
         try:
             o = Order.objects.get(id=obj.dept.parent)
-            if o.parent == "viceCEO":
+            AOX = ("A0S", "A0P", "A0M")
+            if o.parent == "viceCEO" or obj.eid.dept_id in AOX:
                 gl = SupervisorInfo.objects.get(dept=obj.dept)
                 data = creditFind(gl.eid_id, obj.id, data)
         except ObjectDoesNotExist:
@@ -154,26 +155,36 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
 
     def get_dl(self, obj):
         data = {"credit": "", "id": ""}
-        if obj.dept.parent != "viceCEO" and obj.dept_id != "viceCEO":
-            dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
-            data = creditFind(dl.eid_id, obj.id, data)
+        d = ("S0X", "M0A", "Q0A", "O0X", "B0A", "A0X", "I0C")
+        if obj.eid.dept.parent in d:
+            try:
+                dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
+                data = creditFind(dl.eid_id, obj.id, data)
+            except ObjectDoesNotExist:
+                pass
+        if obj.eid.dept_id in d:
+            try:
+                dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
+                data = creditFind(dl.eid_id, obj.id, data)
+            except ObjectDoesNotExist or KeyError:
+                pass
         return data
 
     def get_viceCEO(self, obj):
         data = {"credit": "", "id": ""}
-        viceCEO = SupervisorInfo.objects.get(dept__id="viceCEO")
+        viceCEO = SupervisorInfo.objects.get(dept_id="viceCEO")
         data = creditFind(viceCEO.eid_id, obj.id, data)
         return data
 
     def get_ceo(self, obj):
         data = {"credit": "", "id": ""}
-        ceo = SupervisorInfo.objects.get(dept__id="S0A")
+        ceo = SupervisorInfo.objects.get(dept_id="S0A")
         data = creditFind(ceo.eid_id, obj.id, data)
         return data
 
     def get_chairman(self, obj):
         data = {"credit": "", "id": ""}
-        chairman = SupervisorInfo.objects.get(dept__id="CM")
+        chairman = SupervisorInfo.objects.get(dept_id="CM")
         data = creditFind(chairman.eid_id, obj.id, data)
         return data
 
@@ -340,9 +351,9 @@ def glPoint(data, rec, obj):
             gl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
             glRecord = rec.filter(reviewer=gl.eid_id)
             if len(glRecord) != 0:
-                data["point"] = glRecord[len(glRecord)-1].point
-                data["content"] = glRecord[len(glRecord)-1].content
-                data["recordID"] = glRecord[len(glRecord)-1].id
+                data["point"] = glRecord[len(glRecord) - 1].point
+                data["content"] = glRecord[len(glRecord) - 1].content
+                data["recordID"] = glRecord[len(glRecord) - 1].id
             if type(obj) == ProjectPR:
                 data["proportion"] = glRecord.proportion
     except ObjectDoesNotExist:
@@ -357,9 +368,9 @@ def dlPoint(data, rec, obj):
             dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept.parent)
             dlRecord = rec.filter(reviewer=dl.eid_id)
             if len(dlRecord) != 0:
-                data["point"] = dlRecord[len(dlRecord)-1].point
-                data["content"] = dlRecord[len(dlRecord)-1].content
-                data["recordID"] = dlRecord[len(dlRecord)-1].id
+                data["point"] = dlRecord[len(dlRecord) - 1].point
+                data["content"] = dlRecord[len(dlRecord) - 1].content
+                data["recordID"] = dlRecord[len(dlRecord) - 1].id
         except ObjectDoesNotExist:
             pass
     if obj.eid.dept_id in d:
@@ -367,9 +378,9 @@ def dlPoint(data, rec, obj):
             dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
             dlRecord = rec.filter(reviewer=dl.eid_id)
             if len(dlRecord) != 0:
-                data["point"] = dlRecord[len(dlRecord)-1].point
-                data["content"] = dlRecord[len(dlRecord)-1].content
-                data["recordID"] = dlRecord[len(dlRecord)-1].id
+                data["point"] = dlRecord[len(dlRecord) - 1].point
+                data["content"] = dlRecord[len(dlRecord) - 1].content
+                data["recordID"] = dlRecord[len(dlRecord) - 1].id
         except ObjectDoesNotExist or KeyError:
             pass
     return data
