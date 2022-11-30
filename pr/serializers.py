@@ -234,10 +234,10 @@ class ProjectNeedRecordSerializer(serializers.ModelSerializer):
         con = {"point": "", "content": "", "proportion": "", "recordID": ""}
         rec = ProjectReviewRecord.objects.filter(pid=obj.id)
         try:
-            pmRecord = rec.get(reviewer=obj.belongProject.pmid)
-            con["point"] = pmRecord.point
-            con["content"] = pmRecord.content
-            con["recordID"] = pmRecord.id
+            pmRecord = rec.filter(reviewer=obj.belongProject.pmid)
+            con["point"] = pmRecord[0].point
+            con["content"] = pmRecord[0].content
+            con["recordID"] = pmRecord[0].id
         except ProjectReviewRecord.DoesNotExist:
             pass
         return con
@@ -332,7 +332,8 @@ class NormalNeedRecordSerializer(serializers.ModelSerializer):
 def glPoint(data, rec, obj):
     try:
         o = Order.objects.get(id=obj.eid.dept.parent)
-        if o.parent == "viceCEO":
+        AOX = ("A0S", "A0P", "A0M")
+        if o.parent == "viceCEO" or obj.eid.dept_id in AOX:
             gl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
             glRecord = rec.get(reviewer=gl.eid_id)
             data["point"] = glRecord.point
@@ -346,9 +347,19 @@ def glPoint(data, rec, obj):
 
 
 def dlPoint(data, rec, obj):
-    if obj.eid.dept.parent != "viceCEO":
+    d = ("S0X", "M0A", "Q0A", "O0X", "B0A", "A0X", "I0C")
+    if obj.eid.dept.parent in d:
         try:
             dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept.parent)
+            dlRecord = rec.get(reviewer=dl.eid_id)
+            data["point"] = dlRecord.point
+            data["content"] = dlRecord.content
+            data["recordID"] = dlRecord.id
+        except ObjectDoesNotExist:
+            pass
+    if obj.eid.dept in d:
+        try:
+            dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept)
             dlRecord = rec.get(reviewer=dl.eid_id)
             data["point"] = dlRecord.point
             data["content"] = dlRecord.content
