@@ -76,7 +76,7 @@ class CreditDistributionGetSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_deptName(obj):
-        o = Order.objects.get(id=obj.receiveDept)
+        o = Order.objects.get(id=obj.giveDept)
         return o.name
 
 
@@ -373,14 +373,14 @@ def glPoint(data, rec, obj):
         o = Order.objects.get(id=obj.eid.dept.parent)
         AOX = ("A0S", "A0P", "A0M")
         if o.parent == "viceCEO" or obj.eid.dept_id in AOX:
-            gl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
+            gl = SupervisorInfo.objects.get(dept_id=obj.eid.dept_id)
             glRecord = rec.filter(reviewer=gl.eid_id)
-            if len(glRecord) != 0:
+            if len(glRecord) != 0 and glRecord[len(glRecord) - 1].point not in ("佳", "優", "普"):
                 data["point"] = glRecord[len(glRecord) - 1].point
                 data["content"] = glRecord[len(glRecord) - 1].content
                 data["recordID"] = glRecord[len(glRecord) - 1].id
-            if type(obj) == ProjectPR:
-                data["proportion"] = glRecord.proportion
+                if type(obj) == ProjectPR:
+                    data["proportion"] = glRecord[len(glRecord) - 1].proportion
     except ObjectDoesNotExist:
         pass
     return data
@@ -392,7 +392,7 @@ def dlPoint(data, rec, obj):
         try:
             dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept.parent)
             dlRecord = rec.filter(reviewer=dl.eid_id)
-            if len(dlRecord) != 0:
+            if len(dlRecord) != 0 and dlRecord[len(dlRecord) - 1].point not in ("佳", "優", "普"):
                 data["point"] = dlRecord[len(dlRecord) - 1].point
                 data["content"] = dlRecord[len(dlRecord) - 1].content
                 data["recordID"] = dlRecord[len(dlRecord) - 1].id
@@ -402,7 +402,7 @@ def dlPoint(data, rec, obj):
         try:
             dl = SupervisorInfo.objects.get(dept__id=obj.eid.dept_id)
             dlRecord = rec.filter(reviewer=dl.eid_id)
-            if len(dlRecord) != 0:
+            if len(dlRecord) != 0 and dlRecord[len(dlRecord) - 1].point not in ("佳", "優", "普"):
                 data["point"] = dlRecord[len(dlRecord) - 1].point
                 data["content"] = dlRecord[len(dlRecord) - 1].content
                 data["recordID"] = dlRecord[len(dlRecord) - 1].id

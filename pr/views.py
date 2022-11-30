@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecord, NormalReviewRecord, SupervisorInfo, \
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord, AbleToCredit
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
-    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer
+    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer
 from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
 
 @swagger_auto_schema(
@@ -1029,7 +1029,7 @@ def creditRecordRetrieve(request, pk):
             type=openapi.TYPE_STRING
         ),
     ],
-    responses={200: CreditDistributionSerializer()}
+    responses={200: CreditDistributionGetSerializer()}
 )
 @api_view(['POST','GET'])
 def creditDistribution(request):
@@ -1059,7 +1059,7 @@ def creditDistribution(request):
         creDistribution = CreditDistribution.objects.filter(giveDept=isSupervisor.dept_id)
         if len(creDistribution) == 0 :
             return Response(status=status.HTTP_200_OK,data=msg("當前使用者無給點紀錄"))
-        serializer = CreditDistributionSerializer(creDistribution, many=True)
+        serializer = CreditDistributionGetSerializer(creDistribution, many=True)
         return Response(status=status.HTTP_200_OK,data=serializer.data)
 
 
@@ -1113,7 +1113,7 @@ def creditDistributionRetrieve(request, pk):
             creDistribution = CreditDistribution.objects.get(receiveDept=isSupervisor.dept_id)
         except CreditDistribution.DoesNotExist:
             return Response(status=status.HTTP_200_OK, data=msg("當前使用者無被給點紀錄"))
-        serializer = CreditDistributionGetSerializer(creDistribution)
+        serializer = CreditDistributionSerializer(creDistribution)
         return Response(status=status.HTTP_200_OK,data=serializer.data)
     if request.method == "PATCH":
         try:
