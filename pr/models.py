@@ -106,7 +106,7 @@ class CreditRecord(models.Model):
 
 
 class CreditDistribution(models.Model):
-    giveDept = models.ForeignKey("Order", on_delete=models.RESTRICT)
+    giveDept = models.TextField()
     receiveDept = models.TextField()
     creditDept = models.TextField()
 
@@ -152,3 +152,11 @@ class AttendanceRecord(models.Model):
 
     class Meta:
         db_table = "attendanceRecord"
+
+
+class AbleToCredit(models.Model):
+    dept = models.OneToOneField("Order", on_delete=models.RESTRICT)
+    able = models.BooleanField()
+
+    class Meta:
+        db_table = "ableToCredit"

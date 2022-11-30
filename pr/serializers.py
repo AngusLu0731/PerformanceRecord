@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from pr.models import Employee, ProjectPR, NormalPR, Project, Order, ProjectReviewRecord, NormalReviewRecord, \
-    SupervisorInfo, CreditRecord, CreditDistribution, Annotation, AttendanceRecord
+    SupervisorInfo, CreditRecord, CreditDistribution, Annotation, AttendanceRecord, AbleToCredit
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -67,6 +67,19 @@ class CreditDistributionSerializer(serializers.ModelSerializer):
         fields = ("giveDept", "receiveDept", "creditDept", "id")
 
 
+class CreditDistributionGetSerializer(serializers.ModelSerializer):
+    deptName = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CreditDistribution
+        fields = ("giveDept", "receiveDept", "creditDept", "id", "deptName")
+
+    @staticmethod
+    def get_deptName(obj):
+        o = Order.objects.get(id=obj.receiveDept)
+        return o.name
+
+
 class AnnotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Annotation
@@ -96,6 +109,18 @@ class AttendanceRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = AttendanceRecord
         fields = "__all__"
+
+
+class AbleToCreditSerializer(serializers.ModelSerializer):
+    deptName = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AbleToCredit
+        fields = ("dept", "able", "deptName")
+
+    @staticmethod
+    def get_deptName(obj):
+        return obj.dept.name
 
 
 class CreditNeedRecordSerializer(serializers.ModelSerializer):
@@ -164,7 +189,7 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
                 pass
         if obj.dept_id in d:
             try:
-                dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
+                dl = SupervisorInfo.objects.get(dept=obj.dept_id)
                 data = creditFind(dl.eid_id, obj.id, data)
             except ObjectDoesNotExist or KeyError:
                 pass

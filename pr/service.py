@@ -22,3 +22,8 @@ def editStatus():
             else:
                 print(serializer.errors)
     print("修改結束")
+
+
+def say_something(something):
+    for i in something["data"]:
+        print(i)

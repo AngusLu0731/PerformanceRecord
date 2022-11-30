@@ -6,9 +6,9 @@ from rest_framework.response import Response
 
 
 from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecord, NormalReviewRecord, SupervisorInfo, \
-    Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord
+    Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord, AbleToCredit
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
-    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer
+    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer
 from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
 
 @swagger_auto_schema(
@@ -1113,7 +1113,7 @@ def creditDistributionRetrieve(request, pk):
             creDistribution = CreditDistribution.objects.get(receiveDept=isSupervisor.dept_id)
         except CreditDistribution.DoesNotExist:
             return Response(status=status.HTTP_200_OK, data=msg("當前使用者無被給點紀錄"))
-        serializer = CreditDistributionSerializer(creDistribution)
+        serializer = CreditDistributionGetSerializer(creDistribution)
         return Response(status=status.HTTP_200_OK,data=serializer.data)
     if request.method == "PATCH":
         try:
@@ -1396,6 +1396,28 @@ def CreditDept(request):
             data = {"dept": i.id, "deptName": i.name}
             deptList.append(data)
         return Response(status=status.HTTP_200_OK, data={"data": deptList})
+@swagger_auto_schema(
+    method="GET",
+    operation_summary="查看該部門是否可以開始給點",
+    operation_description="GET /ableToCredit",
+    manual_parameters=[
+        openapi.Parameter(
+            name='Authorization',
+            in_=openapi.IN_HEADER,
+            description='token key',
+            type=openapi.TYPE_STRING
+        ),
+    ],
+    responses={200: AbleToCreditSerializer()}
+)
+@api_view(["GET"])
+def ableToCredit(request):
+    # eid = ValidToken(request.headers.get("token"))
+    # if type(eid) == Response:
+    #     return eid
+    a = AbleToCredit.objects.all()
+    serializer = AbleToCreditSerializer(a,many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 @api_view(["POST"])
 def apiData(request,pk):
