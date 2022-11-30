@@ -24,7 +24,7 @@ def ValidToken(token):
     elif r.status_code == 400:
         return Response(status=status.HTTP_401_UNAUTHORIZED, data="JWT認證錯誤")
     elif r.status_code == 200:
-        rDict = json.loads(r.text).get("data")
+        rDict = json.loads(r.text).get("data").get("payload")
         try:
             ret = rDict["username"]
             return ret
@@ -92,9 +92,10 @@ def projectData():
                         pmid = member["username"]
                         break
                 for member in rDict["members"]:
-                    data = {"pname": pname, "pid": pid, "pmid": pmid,
-                            "eid_id": member["username"], "done": False}
-                    projectList.append(data)
+                    if member["role"] != "admin":
+                        data = {"pname": pname, "pid": pid, "pmid": pmid,
+                                "eid_id": member["username"], "done": False}
+                        projectList.append(data)
             except KeyError:
                 print("error: ")
                 print(rDict)

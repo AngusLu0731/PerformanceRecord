@@ -28,7 +28,7 @@ class NormalPRSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ("id", "eid", "done", "pname")
+        fields = ("id", "eid", "done", "pname", "pid")
 
 
 class OrderSerializer(serializers.ModelSerializer):
