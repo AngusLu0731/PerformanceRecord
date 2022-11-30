@@ -156,13 +156,13 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
     def get_dl(self, obj):
         data = {"credit": "", "id": ""}
         d = ("S0X", "M0A", "Q0A", "O0X", "B0A", "A0X", "I0C")
-        if obj.eid.dept.parent in d:
+        if obj.dept.parent in d:
             try:
                 dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
                 data = creditFind(dl.eid_id, obj.id, data)
             except ObjectDoesNotExist:
                 pass
-        if obj.eid.dept_id in d:
+        if obj.dept_id in d:
             try:
                 dl = SupervisorInfo.objects.get(dept=obj.dept.parent)
                 data = creditFind(dl.eid_id, obj.id, data)
