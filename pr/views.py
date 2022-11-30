@@ -477,7 +477,7 @@ def needRecord(request):
     projectNeedRecordList = []
     for p in pids:
         try:
-            proPR = ProjectPR.objects.get(belongProject=p.pid, status="pm")
+            proPR = ProjectPR.objects.get(belongProject=p.id, status="pm")
         except ProjectPR.DoesNotExist:
             continue
         serializer = ProjectNeedRecordSerializer(proPR)
@@ -1334,6 +1334,7 @@ def isGL(request):
         return eid
     try:
         emp = Employee.objects.get(id=eid)
+        isSupervisor = SupervisorInfo.objects.get(id=eid)
     except:
         return Response(status=status.HTTP_200_OK, data={"isGL": False})
     try:
@@ -1352,7 +1353,8 @@ def isDL(request):
         return eid
     try:
         emp = Employee.objects.get(id=eid)
-    except:
+        isSupervisor = SupervisorInfo.objects.get(id=eid)
+    except ObjectDoesNotExist:
         return Response(status=status.HTTP_200_OK, data={"isDL": False})
     try:
         o = Order.objects.get(id=emp.dept_id)

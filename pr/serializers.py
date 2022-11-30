@@ -106,10 +106,11 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
     viceCEO = serializers.SerializerMethodField()
     ceo = serializers.SerializerMethodField()
     chairman = serializers.SerializerMethodField()
+    isDL = serializers.SerializerMethodField()
 
     class Meta:
         model = Employee
-        fields = ("id", "name", "deptName", "projectScore", "normalScore", "gl", "dl", "viceCEO", "ceo", "chairman")
+        fields = ("id", "name", "deptName", "projectScore", "normalScore", "gl", "dl", "viceCEO", "ceo", "chairman", "isDL")
 
     def get_deptName(self, obj):
         return obj.dept.name
@@ -173,6 +174,16 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
         chairman = SupervisorInfo.objects.get(dept__id="CM")
         data = creditFind(chairman.eid_id, obj.id, data)
         return data
+
+    def get_isDL(self, obj):
+        try:
+            isSupervisor = SupervisorInfo.objects.get(id=obj.id)
+            o = Order.objects.get(id=isSupervisor.dept_id)
+            if o.parent == "viceCEO":
+                return True
+        except ObjectDoesNotExist:
+            return False
+        return False
 
 
 class ProjectPRGetSerializer(serializers.ModelSerializer):
