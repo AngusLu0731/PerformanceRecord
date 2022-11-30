@@ -19,7 +19,7 @@ class Employee(models.Model):
 class ProjectPR(models.Model):
     id = models.BigAutoField(primary_key=True)
     eid = models.ForeignKey("Employee", on_delete=models.RESTRICT)
-    belongProject = models.ForeignKey('Project', on_delete=models.RESTRICT)
+    belongProject = models.ForeignKey('Project', on_delete=models.RESTRICT, to_field="pid")
     workProject = models.TextField(blank=True)
     workDirection = models.TextField(blank=True)
     proportion = models.TextField(blank=True)

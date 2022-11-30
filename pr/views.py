@@ -105,7 +105,7 @@ def projectPR(request):
         try:
             belongProject = request.data["belongProject"]
             emp = Employee.objects.get(id=eid)
-            project = Project.objects.get(eid_id=eid, pid=belongProject, done=False)
+            project = Project.objects.get(eid_id=eid, id=belongProject, done=False)
         except Employee.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND, data=msg("員工號不存在"))
         except Project.DoesNotExist:
@@ -641,7 +641,7 @@ def projectReviewRecordList(request):
         except ProjectPR.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND, data=msg("無此考績可評分"))
         if pPR.status == "pm":
-            p = Project.objects.filter(eid=pPR.eid_id, pid=pPR.belongProject_id, pmid=eid)
+            p = Project.objects.filter(eid=pPR.eid_id, pid=pPR.belongProject.pid, pmid=eid)
             if len(p) == 0:
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data=msg("非此專案PM無法評分"))
             try:
