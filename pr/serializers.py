@@ -143,6 +143,69 @@ class SupervisorInfoSerializer(serializers.ModelSerializer):
         fields = ("dept", "pid")
 
 
+class ScoreSerializer(serializers.ModelSerializer):
+    projectScore = serializers.SerializerMethodField()
+    normalScore = serializers.SerializerMethodField()
+    attendanceScore = serializers.SerializerMethodField()
+    credit = serializers.SerializerMethodField()
+    deptName = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Employee
+        fields = ("id", "name", "dept", "deptName", "projectScore", "normalScore",
+                  "attendanceScore", "credit")
+
+    @staticmethod
+    def get_projectScore(obj):
+        ceo = SupervisorInfo.objects.get(dept__id="S0A")
+        prSet = ProjectPR.objects.filter(eid=obj.id)
+        if len(prSet) > 0:
+            pr = prSet[0]
+            try:
+                ceoPoint = ProjectReviewRecord.objects.get(reviewer=ceo.eid_id, pid=pr.id)
+                return ceoPoint.point
+            except ObjectDoesNotExist:
+                return ""
+        return ""
+
+    @staticmethod
+    def get_normalScore(obj):
+        ceo = SupervisorInfo.objects.get(dept_id="S0A")
+        nrSet = NormalPR.objects.filter(eid=obj.id)
+        if len(nrSet) > 0:
+            nr = nrSet[0]
+            try:
+                ceoPoint = NormalReviewRecord.objects.get(reviewer=ceo.eid_id, pid=nr.id)
+                return ceoPoint.point
+            except ObjectDoesNotExist:
+                return ""
+        return ""
+
+    @staticmethod
+    def get_attendanceScore(obj):
+        try:
+            a = AttendanceRecord.objects.get(eid=obj.id)
+            return a.attendanceScore
+        except ObjectDoesNotExist:
+            return ""
+
+    @staticmethod
+    def get_deptName(obj):
+        return obj.dept.name
+
+    @staticmethod
+    def get_credit(obj):
+        try:
+            ceo = SupervisorInfo.objects.get(dept_id="S0A")
+            creSet = CreditRecord.objects.filter(giver=ceo.eid_id, receiver=obj.id)
+            if len(creSet) > 0:
+                return creSet[0].credit
+            else:
+                return ""
+        except ObjectDoesNotExist:
+            return ""
+
+
 class CreditRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreditRecord
@@ -244,11 +307,11 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
 
     def get_normalScore(self, obj):
         ceo = SupervisorInfo.objects.get(dept_id="S0A")
-        prSet = ProjectPR.objects.filter(eid=obj.id)
-        if len(prSet) > 0:
-            pr = prSet[0]
+        nrSet = NormalPR.objects.filter(eid=obj.id)
+        if len(nrSet) > 0:
+            nr = nrSet[0]
             try:
-                ceoPoint = NormalReviewRecord.objects.get(reviewer=ceo.eid_id, pid=pr.id)
+                ceoPoint = NormalReviewRecord.objects.get(reviewer=ceo.eid_id, pid=nr.id)
                 return ceoPoint.point
             except ObjectDoesNotExist:
                 return ""

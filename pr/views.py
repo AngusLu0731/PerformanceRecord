@@ -3,12 +3,13 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.db.models import Q
 
 
 from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecord, NormalReviewRecord, SupervisorInfo, \
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord, AbleToCredit
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
-    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer, EmployeeGetSerializer, ProjectGetSerializer, NormalReviewRecordGetSerializer, ProjectReviewRecordGetSerializer
+    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer, EmployeeGetSerializer, ProjectGetSerializer, NormalReviewRecordGetSerializer, ProjectReviewRecordGetSerializer, ScoreSerializer
 from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
 
 @swagger_auto_schema(
@@ -1459,13 +1460,57 @@ def notSelfRecord(request):
 @api_view(["GET"])
 def notOtherRecord(request):
     notOtherRecordList = list()
+    eidList = list()
     nr = NormalPR.objects.filter(done="none").values("status")
-    for n in nr:
-        notOtherRecordList.append(n)
-    supervisors = SupervisorInfo.objects.filter(dept__id__in=nr).values("eid_id")
-    empNr = Employee.objects.filter(id__in=supervisors)
-    serializerNR = EmployeeGetSerializer(empNr, many=True)
-    return Response(status=status.HTTP_200_OK, data={"NormalPR":serializerNR.data})
+    pr = ProjectPR.objects.filter(~Q(status="pm"),done="none").values("status")
+    print(pr)
+    pm = ProjectPR.objects.filter(status="pm", done="none").values("belongProject__pmid")
+    supervisorsNR = SupervisorInfo.objects.filter(dept__id__in=nr).values("eid_id")
+    supervisorsPR = SupervisorInfo.objects.filter(dept__id__in=pr).values("eid_id")
+    empNR = Employee.objects.filter(id__in=supervisorsNR)
+    empPR = Employee.objects.filter(id__in=supervisorsPR)
+    empPM = Employee.objects.filter(id__in=pm)
+    serializerNR = EmployeeGetSerializer(empNR, many=True)
+    serializerPR = EmployeeGetSerializer(empPR, many=True)
+    serializerPM = EmployeeGetSerializer(empPM, many=True)
+    data = list()
+    data.append(serializerNR.data)
+    data.append(serializerPR.data)
+    data.append(serializerPM.data)
+    return Response(status=status.HTTP_200_OK, data=data)
+
+@swagger_auto_schema(
+    method="GET",
+    operation_summary="查看未給點",
+    operation_description="GET /notCredit",
+)
+@api_view(["GET"])
+def notCredit(request):
+    able = AbleToCredit.objects.filter(able=True).values_list("dept__supervisorinfo__eid_id")
+    eList = list()
+    for i in able:
+        try:
+            c = CreditRecord.objects.get(giver=i)
+        except CreditRecord.DoesNotExist:
+            if len(i.__str__()) == 6:
+                eList.append((i.__str__())[1:4])
+            elif len(i.__str__()) == 5:
+                eList.append((i.__str__())[1:3])
+    emp = Employee.objects.filter(id__in=eList)
+    serializer = EmployeeGetSerializer(emp, many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+@swagger_auto_schema(
+    method="GET",
+    operation_summary="查看所有員工分數",
+    operation_description="GET /result",
+)
+@api_view(["GET"])
+def result(request):
+    emp = Employee.objects.all()
+    serializer = ScoreSerializer(emp, many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
 

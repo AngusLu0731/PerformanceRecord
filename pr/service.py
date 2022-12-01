@@ -1,4 +1,4 @@
-from pr.models import ProjectPR, NormalPR,AbleToCredit
+from pr.models import ProjectPR, NormalPR, AbleToCredit
 from pr.serializers import ProjectPRSerializer, NormalPRSerializer, AbleToCreditSerializer
 
 
@@ -42,3 +42,26 @@ def able_change(data):
         except KeyError:
             print("Key Error")
 
+
+def edit_status_retrieve(eid):
+    try:
+        p = ProjectPR.objects.get(eid=eid)
+        if p.done != "none":
+            serializer = ProjectPRSerializer(p, data={"status": p.done, "done": "none"}, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                print(serializer.errors)
+    except ProjectPR.DoesNotExist:
+        print("無專案考核")
+    try:
+        n = NormalPR.objects.get(eid=eid)
+        if n.done != "none":
+            serializer = NormalPRSerializer(n, data={"status": n.done, "done": "none"}, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                print(serializer.errors)
+    except ProjectPR.DoesNotExist:
+        print("無四大考核")
+    print("修改結束")
