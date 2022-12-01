@@ -124,21 +124,22 @@ def userData():
             print(i)
         for rDict in rList:
             isSupervisor = SupervisorInfo.objects.filter(eid=rDict["username"])
-            if len(isSupervisor) > 0:
-                try:
-                    o = Order.objects.get(id=rDict["department_code"])
+            if rDict["status"] == "active":
+                if len(isSupervisor) > 0:
+                    try:
+                        o = Order.objects.get(id=rDict["department_code"])
+                        data = {"id": rDict["username"], "name": rDict["name"],
+                                "dept": rDict["department_code"], "needPR": False,
+                                "doneNormalPR": False, "creditStatus": o.parent}
+                        if rDict["department_code"] in ("S0A","I0A"):
+                            data["creditStatus"] = "CM"
+                    except Order.DoesNotExist:
+                        print("抓order錯誤" + rDict)
+                else:
                     data = {"id": rDict["username"], "name": rDict["name"],
                             "dept": rDict["department_code"], "needPR": False,
-                            "doneNormalPR": False, "creditStatus": o.parent}
-                    if rDict["department_code"] in ("S0A","I0A"):
-                        data["creditStatus"] = "CM"
-                except Order.DoesNotExist:
-                    print("抓order錯誤" + rDict)
-            else:
-                data = {"id": rDict["username"], "name": rDict["name"],
-                        "dept": rDict["department_code"], "needPR": False,
-                        "doneNormalPR": False, "creditStatus": rDict["department_code"]}
-            userList.append(data)
+                            "doneNormalPR": False, "creditStatus": rDict["department_code"]}
+                userList.append(data)
         print(userList)
         batch = [Employee(id=row["id"], name=row["name"], dept_id=row["dept"],
                           needPR=row["needPR"], doneNormalPR=row["doneNormalPR"],

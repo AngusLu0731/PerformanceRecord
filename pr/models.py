@@ -5,7 +5,7 @@ from django.db import models
 
 
 class Employee(models.Model):
-    id = models.IntegerField(primary_key=True, null=False, unique=True)
+    id = models.TextField(primary_key=True, null=False, unique=True)
     name = models.TextField(null=False)
     dept = models.ForeignKey("Order", on_delete=models.RESTRICT)
     needPR = models.BooleanField()
@@ -89,7 +89,7 @@ class NormalReviewRecord(models.Model):
 
 class SupervisorInfo(models.Model):
     dept = models.OneToOneField("Order", on_delete=models.RESTRICT)
-    eid = models.OneToOneField('Employee', on_delete=models.RESTRICT)
+    eid = models.ForeignKey('Employee', on_delete=models.RESTRICT)
 
     class Meta:
         db_table = "supervisorInfo"

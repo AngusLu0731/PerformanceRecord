@@ -1428,7 +1428,7 @@ def ableToCredit(request):
 def apiData(request,pk):
     if request.method == "POST":
         if pk == 123888123:
-            attendance()
+            projectData()
             return Response(status=status.HTTP_200_OK,data=msg("done"))
         return Response(status=status.HTTP_200_OK, data=msg("error"))
 
