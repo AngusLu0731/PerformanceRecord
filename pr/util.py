@@ -6,7 +6,7 @@ import os
 from rest_framework import status
 from rest_framework.response import Response
 from pr.models import Order, Project, Employee, SupervisorInfo, AttendanceRecord
-from pr.serializers import EmployeeSerializer
+from pr.serializers import EmployeeSerializer, ProjectSerializer
 
 
 def ValidToken(token):
@@ -94,15 +94,16 @@ def projectData():
                 for member in rDict["members"]:
                     if member["role"] != "admin":
                         data = {"pname": pname, "pid": pid, "pmid": pmid,
-                                "eid_id": member["username"], "done": False}
+                                "eid": member["username"], "done": False}
                         projectList.append(data)
-            except KeyError:
+                        serializer = ProjectSerializer(data=data)
+                        if serializer.is_valid():
+                            serializer.save()
+                        else:
+                            print(serializer.errors)
+            except KeyError or Project.DoesNotExist:
                 print("error: ")
                 print(rDict)
-        print(projectList)
-        batch = [Project(pname=row["pname"], pid=row["pid"], pmid=row["pmid"],
-                         eid_id=row["eid_id"], done=row["done"]) for row in projectList]
-        Project.objects.bulk_create(batch)
         print("-" * 20)
         print("專案資料匯入結束")
         print("-" * 20)
@@ -123,9 +124,8 @@ def userData():
         for i in rList:
             print(i)
         for rDict in rList:
-            isSupervisor = SupervisorInfo.objects.filter(eid=rDict["username"])
             if rDict["status"] == "active":
-                if len(isSupervisor) > 0:
+                if rDict["is_leader"]:
                     try:
                         o = Order.objects.get(id=rDict["department_code"])
                         data = {"id": rDict["username"], "name": rDict["name"],
@@ -197,7 +197,7 @@ def excel():
     for v in eidList:
         try:
             if type(v.value) is str or type(v.value) is int:
-                e = int(v.value)
+                e = str(v.value)
                 prList.append(e)
         except ValueError or TypeError:
             pass
@@ -224,7 +224,7 @@ def haveProject():
     for i in p:
         print(i["eid_id"])
         try:
-            emp = Employee.objects.get(name=i["eid_id"])
+            emp = Employee.objects.get(id=i["eid_id"])
             serializer = EmployeeSerializer(emp, data={"doneNormalPR": True}, partial=True)
             if serializer.is_valid():
                 serializer.save()
