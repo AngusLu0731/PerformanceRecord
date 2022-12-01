@@ -95,8 +95,7 @@ def employee(request):
 )
 @api_view(['POST', 'GET'])
 def projectPR(request):
-    # eid = ValidToken(request.headers.get("data"))
-    eid = 1
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     if request.method == 'POST':
@@ -290,6 +289,8 @@ def normalPR(request):
             data = {"eid": eid, "workQuality": workQuality, "workAmount": workAmount,
                     "coordination": coordination, "learning": learning, "status": emp.dept.parent,
                     "score": score, "done": "none"}
+            if emp.dept_id in ("S0A","I0A"):
+                data["status"] = "CM"
         else:
             data = {"eid": eid, "workQuality": workQuality, "workAmount": workAmount,
                 "coordination": coordination, "learning": learning, "status": emp.dept_id,
@@ -634,11 +635,14 @@ def projectReviewRecordList(request):
             p = Project.objects.filter(eid=pPR.eid_id, pid=pPR.belongProject.pid, pmid=eid)
             if len(p) == 0:
                 return Response(status=status.HTTP_200_OK, data=msg("非此專案PM無法評分"))
-            try:
-                isSupervisor = SupervisorInfo.objects.get(eid=pPR.eid_id)
-                serializerPPR = ProjectPRSerializer(pPR, data={"done": pPR.eid.dept.parent}, partial=True)
-            except SupervisorInfo.DoesNotExist:
-                serializerPPR = ProjectPRSerializer(pPR, data={"done": pPR.eid.dept_id}, partial=True)
+            if pPR.eid.dept_id not in ("S0A", "I0A"):
+                try:
+                    isSupervisor = SupervisorInfo.objects.get(eid=pPR.eid_id)
+                    serializerPPR = ProjectPRSerializer(pPR, data={"done": pPR.eid.dept.parent}, partial=True)
+                except SupervisorInfo.DoesNotExist:
+                    serializerPPR = ProjectPRSerializer(pPR, data={"done": pPR.eid.dept_id}, partial=True)
+            else:
+                serializerPPR = ProjectPRSerializer(pPR, data={"done": "CM"}, partial=True)
             if serializer.is_valid() and serializerPPR.is_valid():
                 serializer.save()
                 serializerPPR.save()
@@ -1412,9 +1416,9 @@ def CreditDept(request):
 )
 @api_view(["GET"])
 def ableToCredit(request):
-    # eid = ValidToken(request.headers.get("token"))
-    # if type(eid) == Response:
-    #     return eid
+    eid = ValidToken(request.headers.get("token"))
+    if type(eid) == Response:
+        return eid
     a = AbleToCredit.objects.all()
     serializer = AbleToCreditSerializer(a,many=True)
     return Response(status=status.HTTP_200_OK, data=serializer.data)

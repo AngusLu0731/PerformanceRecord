@@ -215,8 +215,8 @@ class CreditNeedRecordSerializer(serializers.ModelSerializer):
 
     def get_isDL(self, obj):
         try:
-            d = ("S0X", "M0A", "Q0A", "O0X", "B0A", "A0X", "I0C")
-            isSupervisor = SupervisorInfo.objects.get(id=obj.id)
+            d = ("S0X", "M0A", "Q0A", "O0X", "B0A", "A0X", "I0C", "viceCEO", "S0A")
+            isSupervisor = SupervisorInfo.objects.get(eid_id=obj.id)
             if isSupervisor.dept_id in d:
                 return True
         except ObjectDoesNotExist:
