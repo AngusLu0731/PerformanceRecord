@@ -10,7 +10,7 @@ from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecor
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord, AbleToCredit
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
     ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer, EmployeeGetSerializer, ProjectGetSerializer, NormalReviewRecordGetSerializer, ProjectReviewRecordGetSerializer, ScoreSerializer
-from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
+from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject, attendance
 
 @swagger_auto_schema(
     method='GET',
@@ -28,7 +28,7 @@ from pr.util import msg, ValidToken, orderData , supervisorData, projectData, us
 )
 @api_view(['GET'])
 def employee(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -183,7 +183,7 @@ def projectPR(request):
 )
 @api_view(['GET', 'PATCH'])
 def projectPRRetrieve(request, pk):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -267,7 +267,7 @@ def projectPRRetrieve(request, pk):
 )
 @api_view(['POST', 'GET'])
 def normalPR(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     if request.method == 'POST':
@@ -368,7 +368,7 @@ def normalPR(request):
 )
 @api_view(['GET', 'PATCH'])
 def normalPRRetrieve(request, pk):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     if pk == 1231253:
@@ -414,7 +414,7 @@ def normalPRRetrieve(request, pk):
 )
 @api_view(['GET'])
 def projectEmp(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     projects = Project.objects.filter(eid=eid)
@@ -439,7 +439,7 @@ def projectEmp(request):
 )
 @api_view(['GET'])
 def projectNotDone(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     projects = Project.objects.filter(eid=eid, done=False)
@@ -464,7 +464,7 @@ def projectNotDone(request):
 )
 @api_view(['GET'])
 def needRecord(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     pids = Project.objects.filter(pmid=eid)
@@ -543,7 +543,7 @@ def needRecord(request):
 )
 @api_view(['GET', 'PATCH'])
 def projectReviewRecord(request, pk):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -617,7 +617,7 @@ def projectReviewRecord(request, pk):
 )
 @api_view(['GET', 'POST'])
 def projectReviewRecordList(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     if request.method == 'POST':
@@ -717,7 +717,7 @@ def projectReviewRecordList(request):
 )
 @api_view(['GET', 'PATCH'])
 def normalReviewRecord(request, pk):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -786,7 +786,7 @@ def normalReviewRecord(request, pk):
 )
 @api_view(['GET', 'POST'])
 def normalReviewRecordList(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -846,7 +846,7 @@ def normalReviewRecordList(request):
 )
 @api_view(['GET'])
 def ReviewRecordList(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     nRR = NormalReviewRecord.objects.filter(reviewer=eid)
@@ -903,7 +903,7 @@ def ReviewRecordList(request):
 )
 @api_view(['GET','POST'])
 def creditRecord(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -979,7 +979,7 @@ def creditRecord(request):
 )
 @api_view(['PATCH'])
 def creditRecordRetrieve(request, pk):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1038,7 +1038,7 @@ def creditRecordRetrieve(request, pk):
 )
 @api_view(['POST','GET'])
 def creditDistribution(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1106,7 +1106,7 @@ def creditDistribution(request):
 )
 @api_view(['PATCH','GET'])
 def creditDistributionRetrieve(request, pk):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1172,7 +1172,7 @@ def creditDistributionRetrieve(request, pk):
 )
 @api_view(["POST", "GET"])
 def annotation(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1244,7 +1244,7 @@ def annotation(request):
 )
 @api_view(["GET","PATCH"])
 def annotationRetrieve(request, pk):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1288,7 +1288,7 @@ def annotationRetrieve(request, pk):
 )
 @api_view(["GET"])
 def attendanceRecord(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1300,7 +1300,7 @@ def attendanceRecord(request):
 
 @api_view(["GET"])
 def isPM(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     pm = Project.objects.filter(pmid=eid)
@@ -1312,7 +1312,7 @@ def isPM(request):
 
 @api_view(["GET"])
 def isGL(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1330,7 +1330,7 @@ def isGL(request):
 
 @api_view(["GET"])
 def isDL(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1349,7 +1349,7 @@ def isDL(request):
 
 @api_view(["GET"])
 def isViceCEO(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1361,7 +1361,7 @@ def isViceCEO(request):
 
 @api_view(["GET"])
 def isCEO(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1373,7 +1373,7 @@ def isCEO(request):
 
 @api_view(["GET"])
 def isChairman(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1385,7 +1385,7 @@ def isChairman(request):
 
 @api_view(["GET"])
 def CreditDept(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     try:
@@ -1417,7 +1417,7 @@ def CreditDept(request):
 )
 @api_view(["GET"])
 def ableToCredit(request):
-    eid = ValidToken(request.headers.get("token"))
+    eid = ValidToken(request.headers.get("data"))
     if type(eid) == Response:
         return eid
     a = AbleToCredit.objects.all()
@@ -1428,12 +1428,7 @@ def ableToCredit(request):
 def apiData(request,pk):
     if request.method == "POST":
         if pk == 123888123:
-            orderData()
-            supervisorData()
-            userData()
-            projectData()
-            excel()
-            haveProject()
+            attendance()
             return Response(status=status.HTTP_200_OK,data=msg("done"))
         return Response(status=status.HTTP_200_OK, data=msg("error"))
 

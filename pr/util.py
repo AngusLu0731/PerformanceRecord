@@ -5,7 +5,7 @@ import os
 
 from rest_framework import status
 from rest_framework.response import Response
-from pr.models import Order, Project, Employee, SupervisorInfo
+from pr.models import Order, Project, Employee, SupervisorInfo, AttendanceRecord
 from pr.serializers import EmployeeSerializer
 
 
@@ -242,4 +242,45 @@ def attendance():
     pwd = os.path.dirname(__file__)
     wb = openpyxl.load_workbook(pwd + "/ar.xlsx")
     sheet = wb["list"]
-    tdList = sheet["A":"Z"]
+    empList = []
+    for k in range(1,230):
+        tdList = sheet["A"+str(k) : "Z"+str(k)]
+        cList = []
+        for dList in tdList:
+            for i in dList:
+                if i.value is None:
+                    cList.append("")
+                else:
+                    cList.append(i.value)
+        data = {"eid_id": cList[0], "specialLeave": cList[2],
+                "sickLeave": cList[3], "sickLeavePercentage": cList[4],
+                "personalLeave": cList[5], "personalLeavePercentage": cList[6],
+                "marriageLeave": cList[7], "bereavementLeave": cList[8],
+                "maternityLeave": cList[9], "publicLeave": cList[10],
+                "absenteeism": cList[11], "absenteeismPercentage": cList[12],
+                "commendation": cList[13], "commendationPercentage": cList[14],
+                "minorMerit": cList[15], "minorMeritPercentage": cList[16],
+                "majorMerit": cList[17], "majorMeritPercentage": cList[18],
+                "petition": cList[19], "petitionPercentage": cList[20],
+                "minorDemerit": cList[21], "minorDemeritPercentage": cList[22],
+                "majorDemerit": cList[23], "majorDemeritPercentage": cList[24],
+                "attendanceScore": cList[25]}
+        empList.append(data)
+    batch = [AttendanceRecord(eid_id=row["eid_id"], specialLeave=row["specialLeave"],
+                  sickLeave=row["sickLeave"], sickLeavePercentage=row["sickLeavePercentage"],
+                  personalLeave=row["personalLeave"], personalLeavePercentage=row["personalLeavePercentage"],
+                  marriageLeave=row["marriageLeave"], bereavementLeave=row["bereavementLeave"],
+                  maternityLeave=row["maternityLeave"], publicLeave=row["publicLeave"],
+                  absenteeism=row["absenteeism"], absenteeismPercentage=row["absenteeismPercentage"],
+                  commendation=row["commendation"], commendationPercentage=row["commendationPercentage"],
+                  minorMerit=row["minorMerit"], minorMeritPercentage=row["minorMeritPercentage"],
+                  majorMerit=row["majorMerit"], majorMeritPercentage=row["majorMeritPercentage"],
+                  petition=row["petition"], petitionPercentage=row["petitionPercentage"],
+                  minorDemerit=row["minorDemerit"], minorDemeritPercentage=row["minorDemeritPercentage"],
+                  majorDemerit=row["majorDemerit"], majorDemeritPercentage=row["majorDemeritPercentage"],
+                  attendanceScore=row["attendanceScore"]) for row in empList]
+    AttendanceRecord.objects.bulk_create(batch)
+    print("-" * 20)
+    print("寫入考勤資料結束")
+    print("-" * 20)
+
