@@ -123,10 +123,12 @@ class NormalReviewRecordSerializer(serializers.ModelSerializer):
 class NormalReviewRecordGetSerializer(serializers.ModelSerializer):
     eid = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
+    dept = serializers.SerializerMethodField()
+    deptName = serializers.SerializerMethodField()
 
     class Meta:
         model = NormalReviewRecord
-        fields = ("pid", "reviewer", "point", "content", "id", "eid", "name")
+        fields = ("pid", "reviewer", "point", "content", "id", "eid", "name", "dept", "deptName")
 
     @staticmethod
     def get_name(obj):
@@ -135,6 +137,14 @@ class NormalReviewRecordGetSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_eid(obj):
         return obj.pid.eid.id
+
+    @staticmethod
+    def get_dept(obj):
+        return obj.pid.eid.dept.id
+
+    @staticmethod
+    def get_deptName(obj):
+        return obj.pid.eid.dept.name
 
 
 class SupervisorInfoSerializer(serializers.ModelSerializer):

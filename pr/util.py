@@ -234,3 +234,12 @@ def haveProject():
     print("-" * 20)
     print("判斷是否有專案結束")
     print("-" * 20)
+
+def attendance():
+    print("-" * 20)
+    print("寫入考勤資料")
+    print("-" * 20)
+    pwd = os.path.dirname(__file__)
+    wb = openpyxl.load_workbook(pwd + "/ar.xlsx")
+    sheet = wb["list"]
+    tdList = sheet["A":"Z"]
