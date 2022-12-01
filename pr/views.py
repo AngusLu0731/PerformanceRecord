@@ -1316,7 +1316,7 @@ def isGL(request):
         return eid
     try:
         emp = Employee.objects.get(id=eid)
-        isSupervisor = SupervisorInfo.objects.get(id=eid)
+        isSupervisor = SupervisorInfo.objects.get(eid=eid)
     except:
         return Response(status=status.HTTP_200_OK, data={"isGL": False})
     try:
@@ -1334,7 +1334,7 @@ def isDL(request):
         return eid
     try:
         emp = Employee.objects.get(id=eid)
-        isSupervisor = SupervisorInfo.objects.get(id=eid)
+        isSupervisor = SupervisorInfo.objects.get(eid=eid)
     except ObjectDoesNotExist:
         return Response(status=status.HTTP_200_OK, data={"isDL": False})
     try:
