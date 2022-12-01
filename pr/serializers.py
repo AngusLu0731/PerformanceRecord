@@ -10,6 +10,23 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "dept", "needPR", "doneNormalPR", "creditStatus")
 
 
+class EmployeeGetSerializer(serializers.ModelSerializer):
+    eid = serializers.SerializerMethodField()
+    deptName = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Employee
+        fields = ("eid", "name", "dept", "deptName")
+
+    @staticmethod
+    def get_deptName(obj):
+        return obj.dept.name
+
+    @staticmethod
+    def get_eid(obj):
+        return obj.id
+
+
 class ProjectPRSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPR
@@ -31,6 +48,33 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = ("id", "eid", "done", "pname", "pid")
 
 
+class ProjectGetSerializer(serializers.ModelSerializer):
+    eid = serializers.SerializerMethodField()
+    deptName = serializers.SerializerMethodField()
+    dept = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ("eid", "name", "dept", "deptName")
+
+    @staticmethod
+    def get_eid(obj):
+        return obj.eid.id
+
+    @staticmethod
+    def get_deptName(obj):
+        return obj.eid.dept.name
+
+    @staticmethod
+    def get_dept(obj):
+        return obj.eid.dept_id
+
+    @staticmethod
+    def get_name(obj):
+        return obj.eid.name
+
+
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
@@ -46,7 +90,7 @@ class ProjectReviewRecordSerializer(serializers.ModelSerializer):
 class NormalReviewRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = NormalReviewRecord
-        fields = ("pid", "reviewer", "point", "content")
+        fields = ("pid", "reviewer", "point", "content", "id")
 
 
 class SupervisorInfoSerializer(serializers.ModelSerializer):

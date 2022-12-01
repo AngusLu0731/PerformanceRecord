@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecord, NormalReviewRecord, SupervisorInfo, \
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord, AbleToCredit
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
-    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer
+    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer, EmployeeGetSerializer, ProjectGetSerializer
 from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
 
 @swagger_auto_schema(
@@ -1435,3 +1435,41 @@ def apiData(request,pk):
             haveProject()
             return Response(status=status.HTTP_200_OK,data=msg("done"))
         return Response(status=status.HTTP_200_OK, data=msg("error"))
+
+
+@swagger_auto_schema(
+    method="GET",
+    operation_summary="查看未自評",
+    operation_description="GET /notSelfRecord",
+)
+@api_view(["GET"])
+def notSelfRecord(request):
+    nr = Employee.objects.filter(doneNormalPR=False)
+    serializerNR = EmployeeGetSerializer(nr,many=True)
+    pr = Project.objects.filter(done=False)
+    serializerPR = ProjectGetSerializer(pr, many=True)
+    return Response(status=status.HTTP_200_OK, data={"NormalPR":serializerNR.data,
+                                                     "ProjectPR": serializerPR.data})
+
+@swagger_auto_schema(
+    method="GET",
+    operation_summary="查看未評分",
+    operation_description="GET /notOtherRecord",
+)
+@api_view(["GET"])
+def notOtherRecord(request):
+    notOtherRecordList = list()
+    nr = NormalPR.objects.filter(done="none").values("status")
+    for n in nr:
+        notOtherRecordList.append(n)
+    print(notOtherRecordList)
+    supervisors = SupervisorInfo.objects.filter(dept__id__in=nr).values("eid_id")
+    empNr = Employee.objects.filter(id__in=supervisors)
+    serializerNR = EmployeeGetSerializer(empNr, many=True)
+    return Response(status=status.HTTP_200_OK, data={"NormalPR":serializerNR.data})
+
+
+
+
+
+
