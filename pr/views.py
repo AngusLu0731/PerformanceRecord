@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from pr.models import Employee, ProjectPR, NormalPR, Project, ProjectReviewRecord, NormalReviewRecord, SupervisorInfo, \
     Order, CreditRecord, CreditDistribution, Annotation, AttendanceRecord, AbleToCredit
 from pr.serializers import EmployeeSerializer, ProjectPRSerializer, NormalPRSerializer, ProjectSerializer, \
-    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer, EmployeeGetSerializer, ProjectGetSerializer
+    ProjectReviewRecordSerializer, NormalReviewRecordSerializer, ProjectNeedRecordSerializer, NormalNeedRecordSerializer, CreditRecordSerializer, CreditDistributionSerializer, AnnotationSerializer, AttendanceRecordSerializer, ProjectPRGetSerializer, CreditNeedRecordSerializer, AnnotationGetSerializer, AbleToCreditSerializer, CreditDistributionGetSerializer, EmployeeGetSerializer, ProjectGetSerializer, NormalReviewRecordGetSerializer, ProjectReviewRecordGetSerializer
 from pr.util import msg, ValidToken, orderData , supervisorData, projectData, userData, excel, haveProject
 
 @swagger_auto_schema(
@@ -672,7 +672,7 @@ def projectReviewRecordList(request):
         pRR = ProjectReviewRecord.objects.filter(reviewer=eid)
         if len(pRR) == 0:
             return Response(status=status.HTTP_200_OK, data=msg("無已評分過考績"))
-        serializer = ProjectReviewRecordSerializer(pRR, many=True)
+        serializer = ProjectReviewRecordGetSerializer(pRR, many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
@@ -825,7 +825,7 @@ def normalReviewRecordList(request):
         nRR = NormalReviewRecord.objects.filter(reviewer=eid)
         if len(nRR) == 0:
             return Response(status=status.HTTP_200_OK, data=msg("無已評分過考績"))
-        serializer = NormalReviewRecordSerializer(nRR, many=True)
+        serializer = NormalReviewRecordGetSerializer(nRR, many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
@@ -1462,7 +1462,6 @@ def notOtherRecord(request):
     nr = NormalPR.objects.filter(done="none").values("status")
     for n in nr:
         notOtherRecordList.append(n)
-    print(notOtherRecordList)
     supervisors = SupervisorInfo.objects.filter(dept__id__in=nr).values("eid_id")
     empNr = Employee.objects.filter(id__in=supervisors)
     serializerNR = EmployeeGetSerializer(empNr, many=True)

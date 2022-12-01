@@ -87,10 +87,54 @@ class ProjectReviewRecordSerializer(serializers.ModelSerializer):
         fields = ("pid", "reviewer", "point", "content", "proportion", "id")
 
 
+class ProjectReviewRecordGetSerializer(serializers.ModelSerializer):
+    projectID = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    projectName = serializers.SerializerMethodField()
+    eid = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectReviewRecord
+        fields = ("pid", "reviewer", "point", "content", "proportion", "id", "projectID", "name", "projectName", "eid")
+
+    @staticmethod
+    def get_projectID(obj):
+        return obj.pid.belongProject.pid
+
+    @staticmethod
+    def get_projectName(obj):
+        return obj.pid.belongProject.pname
+
+    @staticmethod
+    def get_name(obj):
+        return obj.pid.eid.name
+
+    @staticmethod
+    def get_eid(obj):
+        return obj.pid.eid.id
+
+
 class NormalReviewRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = NormalReviewRecord
         fields = ("pid", "reviewer", "point", "content", "id")
+
+
+class NormalReviewRecordGetSerializer(serializers.ModelSerializer):
+    eid = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = NormalReviewRecord
+        fields = ("pid", "reviewer", "point", "content", "id", "eid", "name")
+
+    @staticmethod
+    def get_name(obj):
+        return obj.pid.eid.name
+
+    @staticmethod
+    def get_eid(obj):
+        return obj.pid.eid.id
 
 
 class SupervisorInfoSerializer(serializers.ModelSerializer):
